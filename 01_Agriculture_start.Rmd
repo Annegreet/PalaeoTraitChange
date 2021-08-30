@@ -1,0 +1,254 @@
+---
+title: "Explaining variables"
+output:
+  html_document:
+    df_print: paged
+---
+```{r include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+
+```{r load packages}
+library(tidyverse)
+library(readxl)
+```
+
+## Defining agriculture in records
+### Start of agriculture as defined by authors
+```{r authors}
+meta <- read_xlsx("Data/Meta-analysis_PollenRecords.xlsx", sheet = 3)
+lPOL <- readRDS("RDS_files/03_PollenWEU-Harmonised.rds") 
+sitenames <- names(lPOL) %>% sort
+
+#select relevant sites
+meta <- meta %>% 
+  filter(site.name %in% sitenames) %>% 
+  dplyr::select(site.name, Country, First.agriculture) %>% 
+  distinct %>% 
+  arrange(site.name)  
+
+authors <- lPOL %>% 
+  purrr::map(., ~left_join(., meta, by = "site.name") %>% 
+               dplyr::select(.,site.name, depth, age, First.agriculture) %>% 
+               mutate(., author = case_when(
+                                  as.numeric(First.agriculture) > age ~ 1,
+                                  as.numeric(First.agriculture) < age ~ 0,
+                                  First.agriculture == "before start of record" ~ 2,                  
+                                  First.agriculture == "pastoral agriculture before start of the record" ~ 2)
+                      )
+             ) %>% 
+  bind_rows() %>% 
+  dplyr::select(site.name, depth, age, everything()) %>% 
+  arrange(site.name, age) %>% 
+  filter(age <= 10000)
+
+authors
+```
+
+
+### ArchaeoGLOBE
+```{r archaeoglobe}
+archaeoglobe <- read.csv('Data/ARCHAEOGLOBE_CONSENSUS_ASSESSMENT.tab', sep = "")
+
+regions <- archaeoglobe %>% 
+  dplyr::select(Region, Label) %>% 
+  distinct() %>% 
+  filter(Label %in% c("United Kingdom and Ireland", "Scandinavia",
+                      "France", "Central Europe"))
+
+# create tabel to translate archaeoglobe regions to countries in study
+# and categories pollen sites 
+countries <- tibble(Country = c("Great-Britain",
+                                "Ireland",
+                                "France", 
+                                "Sweden",
+                                "Germany",
+                                "Switzerland",
+                                "Czech"), 
+                    Label = c("United Kingdom and Ireland",
+                                 "United Kingdom and Ireland",
+                                 "France",
+                                 "Scandinavia",
+                                 "Central Europe",
+                                 "Central Europe",
+                                 "Central Europe"))
+
+archaeoglobe <- meta %>% 
+  dplyr::select(site.name, Country) %>% 
+  right_join(., countries, by = "Country") %>% 
+  left_join(., archaeoglobe, by = "Label")
+
+archaeoglobe <- archaeoglobe %>%
+  # convert to long format
+  gather(., key = "LandUse_Time", value = "Level", FHG_10KBP:URBAN_1850CE) %>%
+  # create 2 variables from key: LandUse and TimeBP
+  separate(., "LandUse_Time", c("LandUse", "Time.BP"), sep = "_") %>%
+  # convert to numeric and years BP
+  mutate(., Time.BP = ifelse(str_detect(Time.BP, pattern = "KBP"),
+                             as.numeric(str_remove(Time.BP, pattern = "KBP"))*1000,
+                             ifelse(str_detect(Time.BP, pattern = "kbp"),
+                                    as.numeric(str_remove(Time.BP, pattern = "kbp"))*1000,
+                                    2020 - as.numeric(str_remove(Time.BP, pattern = "CE"))))) %>%
+  arrange(Time.BP) %>%
+  dplyr::select(-Region, -Label) %>% 
+  # add time label for joining
+  mutate(timecat = factor(Time.BP, labels = as.character(1:length(unique(Time.BP))))) %>% 
+  pivot_wider(names_from = LandUse, values_from = Level)
+
+archaeoglobe
+```
+
+### EuroEVOL dataset
+```{r euroevol}
+euroevol <- readRDS("RDS_files/SummedProbArchaeoNormalizedSites-summedTimebin.rds")
+sitenames <- names(euroevol)
+
+# create data frame of levels and time bins to fill in with data
+timecat <- seq(from = 0, to = 10500, by = 500)
+timecat.lab <- labels(timecat)
+dftimecat <- tibble(time.bin = as.numeric(timecat.lab), Time.BP = timecat)
+dftimecat <- map2_dfr(length(meta$site.name), meta$site.name, 
+                    ~dftimecat %>% mutate(site.name = .y))
+
+euroevol <- euroevol %>% 
+  map2_dfr(., sitenames, ~mutate(., site.name = .y,
+                                 time.bin = as.numeric(time.bin))) 
+
+euroevol <- 
+  full_join(dftimecat, euroevol, by = c("time.bin", "site.name")) %>% 
+  dplyr::select(site.name, time.bin, Time.BP, everything()) %>% 
+  filter(site.name %in% sitenames) %>% 
+  arrange(site.name, time.bin) %>% 
+  filter(!is.na(Time.BP)) %>% 
+  # add time label for joining
+  mutate(timecat2 = factor(Time.BP, labels = as.character(1:length(unique(Time.BP)))))
+euroevol
+```
+
+
+
+## Likelihood of presence of agriculture
+No chance - none of the indicators indicate agriculture
+Potentially - 2/3 indicators indicate agriculture. At least ArchaeoGLOBE and or EuroEVOL/authors judgement
+Likely - 3/3 indicators indicate agriculture?
+
+```{r compile}
+# make three dataframes with agriculture indicators
+# pastoral and/or arable
+agricult <- authors %>% 
+    mutate(., timecat = cut(age, breaks = c(-Inf, unique(archaeoglobe$Time.BP), Inf),
+                          labels = c(1,1:length(unique(archaeoglobe$Time.BP))))) %>% 
+  mutate(., timecat2 = cut(age, breaks = c(-Inf, unique(euroevol$Time.BP), Inf),
+                          labels = c(1,1:length(unique(euroevol$Time.BP))))) %>% 
+  left_join(., archaeoglobe, by = c("site.name","timecat")) %>% 
+  left_join(., euroevol, by = c("site.name", "timecat2")) %>% 
+  dplyr::select(site.name, age, EXAG, INAG, PAS, author,
+                density)
+agricult
+```
+
+```{r decision tree}
+densitylimit <- quantile(agricult$density,probs = 0.1, na.rm = TRUE) %>% as.numeric()
+
+dfAGRI <- agricult %>% 
+  mutate(EXAG = as.factor(EXAG), INAG = as.factor(INAG), PAS = as.factor(PAS)) %>% 
+  mutate(PresenceAgri = case_when(author == 1 ~ "After agriculture",
+                                  author == 0 ~ "Before agriculture",
+                                  EXAG %in% c("None", "Minimal")|
+                                  INAG %in% c("None", "Minimal")|
+                                  PAS  %in% c("None", "Minimal") ~ "Before agriculture",
+                                  author == 2 ~ "After agriculture",
+                                  EXAG %in% c("Common", "Widespread") &  density > densitylimit |
+                                  INAG %in% c("Common", "Widespread") &  density > densitylimit |
+                                  PAS %in% c("Common", "Widespread")  &  density > densitylimit ~ "After agriculture"
+                                  )
+         ) %>% 
+  group_by(site.name) %>% 
+  fill(PresenceAgri, .direction = "up") 
+dfAGRI
+dfAGRI %>% filter(is.na(PresenceAgri)) %>% View(.)
+saveRDS(dfAGRI, "RDS_files/Archaeological_indicators.rds") 
+```
+
+```{r plot agricultural indicators}
+# colour palette
+cbf <- c("#999999", "#E69F00", "#56B4E9", "#009E73", 
+         "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+p <- dfAGRI %>% 
+  filter(site.name %in% sitenames[1:10]) %>% 
+  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
+  geom_line(aes(colour = INAG), size = 1) +
+  scale_y_continuous("Summed probability density") +
+  scale_x_reverse("Years (BP)") +
+  ggtitle("Archaeological indicators") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
+  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
+p
+p <- dfAGRI %>% 
+  filter(site.name %in% sitenames[11:20]) %>% 
+  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
+  geom_line(aes(colour = INAG), size = 1) +
+  scale_y_continuous("Summed probability density") +
+  scale_x_reverse("Years (BP)") +
+  ggtitle("Archaeological indicators") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
+  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
+p
+p <- dfAGRI %>% 
+  filter(site.name %in% sitenames[21:30]) %>% 
+  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
+  geom_line(aes(colour = INAG), size = 1) +
+  scale_y_continuous("Summed probability density") +
+  scale_x_reverse("Years (BP)") +
+  ggtitle("Archaeological indicators") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
+  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
+p
+p <- dfAGRI %>% 
+  filter(site.name %in% sitenames[31:40]) %>% 
+  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
+  geom_line(aes(colour = INAG), size = 1) +
+  scale_y_continuous("Summed probability density") +
+  scale_x_reverse("Years (BP)") +
+  ggtitle("Archaeological indicators") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
+  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
+p
+p <- dfAGRI %>% 
+  filter(site.name %in% sitenames[41:50]) %>% 
+  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
+  geom_line(aes(colour = INAG), size = 1) +
+  scale_y_continuous("Summed probability density") +
+  scale_x_reverse("Years (BP)") +
+  ggtitle("Archaeological indicators") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
+  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
+p
+p <- dfAGRI %>% 
+  filter(site.name %in% sitenames[51:60]) %>% 
+  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
+  geom_line(aes(colour = INAG), size = 1) +
+  scale_y_continuous("Summed probability density") +
+  scale_x_reverse("Years (BP)") +
+  ggtitle("Archaeological indicators") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
+  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
+p
+
+#ggsave("Figures/temp.png", p, dpi = 600, height = 1200, units = "mm")
+
+```

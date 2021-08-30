@@ -1,0 +1,230 @@
+---
+title: "Reformating and re-calibrating pollen records"
+author: "Annegreet Veeken"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE,
+                      results='hide', fig.keep='all')
+```
+
+This R script reformats and re-calibrates pollen data from Althea Davies.
+```{r load packages}
+library(tidyverse)
+library(Bchron)
+library(readxl)
+library(knitr)
+```
+# Load data
+```{r load pollen data}
+# Load pollen data, provided by the author
+TOR <- 
+  read_xls("Data/ADavies Thesis tilia files for Annegreet Jan 2021.xls", 
+           sheet = "TORRAW", skip = 2) %>% 
+  filter(!is.na(Sample))
+CAR <- 
+  read_xls("Data/ADavies Thesis tilia files for Annegreet Jan 2021.xls", 
+                sheet = "CARRAW", skip = 2) %>% 
+  filter(!is.na(Sample))
+CAM <- 
+  read_xls("Data/ADavies Thesis tilia files for Annegreet Jan 2021.xls", 
+                sheet = "CAMRAW", skip = 2) %>% 
+  filter(!is.na(Sample))
+MOR <- 
+  read_xls("Data/ADavies Thesis tilia files for Annegreet Jan 2021.xls", 
+                sheet = "MORRAW", skip = 2)  %>% 
+  filter(!is.na(Sample))
+
+```
+
+```{r load chronologies}
+age <- 
+  read_xls("Data/ADavies Thesis tilia files for Annegreet Jan 2021.xls",
+           sheet = "Chronology", skip = 2) %>% 
+  select(contains("Lab")|contains("Depth")|contains("Age (14C")) 
+
+# reformat per site
+TORage <- age %>% 
+  select(1,5,9) %>% 
+  drop_na() %>% 
+  dplyr::select(LabID = contains("Lab"), Depth = contains("Depth"),
+                Age = contains("Age")) %>% 
+  separate(col = "Age", into = c("Age", "AgeSD"), sep = "±") %>% 
+  mutate(calCurve = ifelse(Age == "modern", "normal","intcal13")) %>% 
+  mutate(AgeSD = replace(AgeSD, Age == "modern", 250),
+    Age = replace(Age, Age == "modern", 0)) %>% 
+  mutate(Age = as.numeric(Age), AgeSD = as.numeric(AgeSD)) %>% 
+  arrange(Depth)
+
+CARage <- age %>% 
+  select(2,6,10) %>% 
+  drop_na() %>% 
+  dplyr::select(LabID = contains("Lab"), Depth = contains("Depth"),
+                Age = contains("Age")) %>% 
+  separate(col = "Age", into = c("Age", "AgeSD"), sep = "±") %>% 
+  mutate(calCurve = ifelse(Age == "modern", "normal","intcal13")) %>% 
+  mutate(AgeSD = replace(AgeSD, Age == "modern", 250),
+    Age = replace(Age, Age == "modern", 0)) %>% 
+  mutate(Age = as.numeric(Age), AgeSD = as.numeric(AgeSD)) %>% 
+  arrange(Depth)
+
+CAMage <- age %>% 
+  select(3,7,11) %>% 
+  drop_na() %>% 
+  dplyr::select(LabID = contains("Lab"), Depth = contains("Depth"),
+                Age = contains("Age")) %>% 
+  separate(col = "Age", into = c("Age", "AgeSD"), sep = "±") %>% 
+  mutate(calCurve = ifelse(Age == "modern", "normal","intcal13")) %>% 
+  mutate(AgeSD = replace(AgeSD, Age == "modern", 250),
+    Age = replace(Age, Age == "modern", 0)) %>%  
+  mutate(Age = as.numeric(Age), AgeSD = as.numeric(AgeSD)) %>% 
+  arrange(Depth)
+
+MORage <- age %>% 
+  select(4,8,12) %>% 
+  drop_na() %>% 
+  dplyr::select(LabID = contains("Lab"), Depth = contains("Depth"),
+                Age = contains("Age")) %>% 
+  separate(col = "Age", into = c("Age", "AgeSD"), sep = "±") %>% 
+  mutate(calCurve = ifelse(Age == "modern (post-1950)", "normal","intcal13")) %>% 
+  mutate(AgeSD = replace(AgeSD, Age == "modern (post-1950)", 250),
+         Age = replace(Age, Age == "modern (post-1950)", 0)) %>% 
+  mutate(Age = as.numeric(Age), AgeSD = as.numeric(AgeSD)) %>% 
+  arrange(Depth)
+
+```
+# Re-calibrating chronologies
+For reference: 
+https://cran.r-project.org/web/packages/Bchron/vignettes/Bchron.html#running-the-bchronology-age-depth-model
+https://fishandwhistle.net/post/2018/comparing-approaches-to-age-depth-modelling-in-r/ 
+http://open.neotomadb.org/workbooks/AgeModels.html
+```{r recalibrate chronology, cache=TRUE}
+# re-calibrate chronologies
+TORcal <- with(TORage,
+              Bchronology(ages = Age, ageSds = AgeSD, 
+                          calCurves = calCurve,
+                          positions = Depth,
+                          ids = LabID,
+                          positionThicknesses = rep(1, nrow(TORage)),
+                          predictPositions = TOR$Sample))
+plot(TORcal)
+kable(TORage,format="markdown", caption= "Uncalibrated radiocarbon dates of Torran Beithe")
+
+CARcal <- with(CARage,
+              Bchronology(ages = Age, ageSds = AgeSD, 
+                calCurves = calCurve,
+                positions = Depth,
+                ids = LabID,
+                positionThicknesses = rep(1, nrow(CARage)),
+                predictPositions = CAR$Sample))
+plot(CARcal)
+kable(CARage, format = "markdown", caption = "Uncalibrated radiocarbon dates Carrach Mor")
+
+CAMcal <- with(CAMage,
+              Bchronology(ages = Age, ageSds = AgeSD, 
+                          calCurves = calCurve,
+                          positions = Depth,
+                          ids = LabID,
+                          positionThicknesses = rep(1, nrow(CAMage)),
+                          predictPositions = CAM$Sample))
+plot(CAMcal)
+#kable(CAMage, format = "markdown", caption = "Uncalibrated radiocarbon dates Camban")
+
+MORcal <- with(MORage,
+              Bchronology(ages = Age, ageSds = AgeSD, 
+                          calCurves = calCurve,
+                          positions = Depth,
+                          ids = LabID,
+                          positionThicknesses = rep(1, nrow(MORage)),
+                          predictPositions = MOR$Sample))
+plot(MORcal)
+kable(MORage, format =  "markdown", caption = "Uncalibrated radiocarbon dates Morvich")
+
+```
+
+```{r create df same format as neotoma data sets }
+
+dfTOR <- data.frame(site.name = "Torran Beithe",
+                    depth = TOR$Sample,
+                    age = apply(TORcal$thetaPredict, 2, "quantile", 
+                                probs = 0.5), 
+                    age.old = apply(TORcal$thetaPredict, 2, "quantile", 
+                                    probs = 1 - (1 - 0.95)/2), 
+                    age.young = apply(TORcal$thetaPredict, 2, "quantile", 
+                                     probs = (1 - 0.95)/2),
+                    date.type = "Bchron", 
+                    lat = 57.241371, 
+                    long = -5.100559, 
+                    dataset = 1, 
+                    TOR[,-1])
+
+dfCAR <- data.frame(site.name = "Carrach Mor",
+                    depth = CAR$Sample,
+                    age = apply(CARcal$thetaPredict, 2, "quantile", 
+                                probs = 0.5), 
+                    age.old = apply(CARcal$thetaPredict, 2, "quantile", 
+                                    probs = 1 - (1 - 0.95)/2), 
+                    age.young = apply(CARcal$thetaPredict, 2, "quantile", 
+                                     probs = (1 - 0.95)/2),
+                    date.type = "Bchron", 
+                    lat = 57.236423,
+                    long =-5.15484569, 
+                    dataset = 1, 
+                    CAR[,-1])
+
+dfCAM <- data.frame(site.name = "Camban",
+                    depth = CAM$Sample,
+                    age = apply(CAMcal$thetaPredict, 2, "quantile", 
+                                probs = 0.5), 
+                    age.old = apply(CAMcal$thetaPredict, 2, "quantile", 
+                                    probs = 1 - (1 - 0.95)/2), 
+                    age.young = apply(CAMcal$thetaPredict, 2, "quantile", 
+                                     probs = (1 - 0.95)/2),
+                    date.type = "Bchron",                     lat = 57.213091, 
+                    long = -5.2240879, 
+                    dataset = 1, 
+                    CAM[,-1])
+
+dfMOR <- data.frame(site.name = "Morvich",
+                    depth = MOR$Sample,
+                    age = apply(MORcal$thetaPredict, 2, "quantile", 
+                                probs = 0.5), 
+                    age.old = apply(MORcal$thetaPredict, 2, "quantile", 
+                                    probs = 1 - (1 - 0.95)/2), 
+                    age.young = apply(MORcal$thetaPredict, 2, "quantile", 
+                                     probs = (1 - 0.95)/2),
+                    date.type = "Bchron", 
+                    lat = NA, 
+                    long = NA, 
+                    dataset = 1, 
+                    MOR[,-1])
+
+lPOL <- list(dfTOR, dfCAR, dfCAM, dfMOR)
+
+lPOL <- lPOL %>% 
+  purrr::map(., ~select_if(., !names(.) %in% 
+                        c("Trees",	"Shrubs",	"Heaths",	"Herbs",
+                               "Aquatics",	"Cryptgrams",	"Bryophytes",
+                               "TLP",	"Volume.of.sample","Volume.used", "Total.land.pollen","Sample.age.cal.BP.",
+"Sample.age.14C.BP.",
+"No..of.tablets","No..tablets",                     
+"No..tablets.added",                      
+"Number.of.tablets","Total.land.pollen",
+"Loss.on.ignition","Age..14C.BP.","Age..cal.BP.",
+"X14C.age", "SCP", "Chron3", "Chron4", "cal.age",
+"Stomata","Stomata.undiff.", "Spheroidal.carbonaceous.particles",
+"Spike..exotic.",
+"Pre.Quaternary.spores","LOI",
+"Grains.per.tablet", 
+"Charcoal.sum",
+"Charred.pine.stomata",
+"Charred.stomata"
+
+)))
+
+
+saveRDS(davies, "RDS_files/01_Pollen-Adavies.rds")
+
+```
+
+
