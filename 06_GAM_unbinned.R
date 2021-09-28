@@ -8,7 +8,6 @@ library(coda)
 library(mgcv) 
 library(gridExtra) # for combining plots
 library(cowplot) # for get_legend
-library(ggExtra) # for marginal distributions
 
 ## Prepare data ----
 dfCWM <- readRDS("RDS_files/05_Posterior_alltraits_unbinned.rds")
@@ -45,9 +44,9 @@ units <- tibble(trait = c("SLA", "PlantHeight","LDMC",
                           "Community height (m)",
                           "Community LDMC (g/g)",
                           "Community leaf area (mm2)",
-                          "Community leaf carbon (mg/g)",
-                          "Community leaf nitrogen (mg/g)",
-                          "Community leaf phosphorus (mg/g)",
+                          "Community leaf C (mg/g)",
+                          "Community leaf N (mg/g)",
+                          "Community leaf P (mg/g)",
                           "Community seed count",
                           "Community seed length (mm)",
                           "Community seed mass (mg)"),
@@ -200,7 +199,7 @@ gg_func <- function(jam, selectedtrait) {
   ggplot(data = CWMall[CWMall$trait == selectedtrait,], 
          aes(x = age, y = exp(Mean))) +
     geom_point(aes(colour = tree),  size = .5) +
-    scale_color_gradient("Tree pollen (%)", low = cbf[5],
+    scale_color_gradient("Tree pollen\n(%)", low = cbf[5],
                          high = cbf[4], limits = c(0, 100)) +
     scale_y_continuous(units$units[units$trait == selectedtrait]) +
      scale_x_reverse("Time (calibrated years BP)", limits = c(10000,0)) +
@@ -210,8 +209,10 @@ gg_func <- function(jam, selectedtrait) {
     geom_ribbon(data = df, alpha = 0, colour = "#0072B2", fill ="#0072B2",
                 aes(ymin = exp(Mean - se), ymax = exp(Mean + se))) + 
     theme_bw() +
-    theme(legend.position = "none")
+    theme(legend.position = "none",
+          text = element_text(size = 10))
 }
+
 windows()
 p <- purrr::map2(jam_list, names(jam_list), 
                  ~gg_func(.x,.y))
@@ -227,7 +228,7 @@ df <- data.frame(age = values$x, Mean = intercept + values$fit, se = values$se)
 p1 <- ggplot(data = CWMall[CWMall$trait == selectedtrait,], 
              aes(x = age, y = exp(Mean))) +
   geom_point(aes(colour = tree)) +
-  scale_color_gradient("Tree pollen (%)", low = cbf[5],
+  scale_color_gradient("Tree pollen\n(%)", low = cbf[5],
                        high = cbf[4], limits = c(0, 100)) +
   scale_y_continuous(units$units[units$trait == selectedtrait]) +
   scale_x_reverse("Time (calibrated years BP)", limits = c(10000,0)) +
@@ -237,7 +238,8 @@ p1 <- ggplot(data = CWMall[CWMall$trait == selectedtrait,],
   geom_ribbon(data = df, alpha = 0, colour = "#0072B2", fill ="#0072B2",
               aes(ymin = exp(Mean - se), ymax = exp(Mean + se))) + 
   theme_bw() +
-  theme(legend.position = "right")
+  theme(legend.position = "right",
+        text = element_text(size = 10))
 p1
 
 selectedtrait <- "LDMC"
@@ -262,7 +264,8 @@ p2 <- ggplot(data = CWMall[CWMall$trait == "LDMC",],
   geom_ribbon(data = df, alpha = 0, colour = "#0072B2", fill ="#0072B2",
               aes(ymin = Mean - se, ymax = Mean + se)) + 
   theme_bw() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        text = element_text(size = 10))
 p2
 
 mylegend <- get_legend(p1)
@@ -278,9 +281,11 @@ pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p2, p$LeafC,
                                           c(5,6,11),
                                           c(7,8,NA),
                                           c(9,10,NA)),
-                    mylegend, nrow = 5, ncol = 3, widths = c(2,2,0.75))
+                    mylegend, nrow = 5, ncol = 3, 
+                    widths = c(2,2,0.5))
 
-ggsave("Figures/Fig5-GAM_time.png", pall, width = 7.5, height = 12)
+ggsave("Figures/Fig5-GAM_time.png", pall, width = 174, 
+       height = 247, units = "mm", dpi = 600)
 
 # draws from posteriors for all traits----
 gam_samples <- function(trait){
@@ -460,13 +465,13 @@ gg_func_agri <- function(jam, selectedtrait) {
     scale_x_continuous("Years since arrival of agriculture",
                        limits = c(-5000, 5000)) +
     theme_bw() +
-    theme(legend.position = "none")
+    theme(legend.position = "none",
+          text = element_text(size = 10))
 }
 
 windows()
 p <- purrr::map2(jam_list2, names(jam_list2), 
                  ~gg_func_agri(.x,.y))
-
 
 # plot for extracting legend
 selectedtrait <- "SLA"
@@ -493,7 +498,7 @@ df <- tibble(Time = values$x, Mean = values$fit + intercept,
 p1 <- ggplot(data = CWM, aes(x = years.since, y = exp(Mean))) +
   # plot residuals
   geom_point(aes(colour = crop), size = 0.5) +
-  scale_color_gradient("Crop pollen (%)", low = cbf[5], high = cbf[4],
+  scale_color_gradient("Crop pollen\n(%)", low = cbf[5], high = cbf[4],
                        limits = c(0.01,100), trans = "log",breaks = c(0.1,2.5,50),
                        labels = c(0.1,2.5,50), na.value = "#999999") +
   geom_line(data = df, aes(x = Time, y = exp(Mean)), size = 1.5, 
@@ -507,7 +512,10 @@ p1 <- ggplot(data = CWM, aes(x = years.since, y = exp(Mean))) +
   scale_y_continuous(units$units[units$trait == selectedtrait]) +
   scale_x_continuous("Years since arrival of agriculture",
                      limits = c(-5000, 5000)) +
-  theme_bw() 
+  theme_bw() +
+  theme(legend.position = "right",
+        text = element_text(size = 10))
+
 mylegend <- get_legend(p1)
 
 # plot LDMC separately (no exp transformation)
@@ -550,26 +558,27 @@ p2 <- ggplot(data = CWM, aes(x = years.since, y = Mean)) +
   scale_x_continuous("Years since arrival of agriculture",
                      limits = c(-5000,5000)) +
   theme_bw() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        text = element_text(size = 10))
+
 p2
 
+# Set common scale
 p$LeafC <- p$LeafC +  scale_y_continuous(units$units[units$trait == "LeafC"],limits = c(425, 560)) 
 
-
 windows()
-pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p2, 
-                     p$LeafC, p$LeafN, p$LeafP,
-                     p$Seed.count, p$Seed.lenght, p$Seed.mass,
+pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p2, p$LeafC,
+                     p$LeafN, p$LeafP, p$Seed.count, p$Seed.lenght, p$Seed.mass,
                      layout_matrix = rbind(c(1,2,NA),
                                            c(3,4,NA),
                                            c(5,6,11),
                                            c(7,8,NA),
                                            c(9,10,NA)),
-                     widths = c(3,3,1.5),
-                     mylegend, 
-                     nrow = 5, ncol = 3)
+                     mylegend, nrow = 5, ncol = 3, widths = c(2,2,0.5))
 
-ggsave("Figures/Fig6a_GAM_arrival_agri.png", pall, width = 7.5, height = 12)
+ggsave("Figures/Fig6a_GAM_arrival_agri.png", pall,
+       width = 174, 
+       height = 247, units = "mm", dpi = 600)
 
 # draws from posterior ---- 
 
@@ -595,7 +604,8 @@ gam_samples_agri <- function(trait){
   }
 }
 
-png("Figures/SI4-Draws-agri.png", width = 174, height = 300, units = "mm", res = 300)
+png("Figures/SI4-Draws-agri.png", width = 174, 
+    height = 300, units = "mm", res = 300)
 par(mfrow = c(5,2))
 purrr::map(c("PlantHeight","SLA", "LA","LDMC", 
              "LeafC", "LeafN", "LeafP", 
@@ -648,7 +658,8 @@ gg_func_temp <- function(jam, selectedtrait) {
     scale_x_continuous("Temperature (°C)",
                        limits = c(0,13)) +
     theme_bw() +
-    theme(legend.position = "none")
+    theme(legend.position = "none",
+          text = element_text(size = 10))
 }
 windows()
 q <- purrr::map2(jam_list2, names(jam_list2), 
@@ -671,21 +682,26 @@ q2 <- ggplot(data = CWM, aes(x = temp, y = Mean)) +
   scale_x_continuous("Temperature (°C)",
                      limits = c(0,13)) +
   theme_bw() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+        text = element_text(size = 10))
+
+# set same axis limits
 q$LeafC <- q$LeafC +  scale_y_continuous(units$units[units$trait == "LeafC"],limits = c(425, 560)) 
 
+
 windows()
-pall <- grid.arrange(q$PlantHeight, q$SLA, q$LA, q2, q$LeafC, q$LeafN, q$LeafP,
+qall <- grid.arrange(q$PlantHeight, q$SLA, q$LA, q2, q$LeafC, q$LeafN, q$LeafP,
                      q$Seed.count, q$Seed.lenght, q$Seed.mass,
                      layout_matrix = rbind(c(1,2),
                                            c(3,4),
                                            c(5,6),
                                            c(7,8),
                                            c(9,10)),
-                     widths = c(4,4),
+                     widths = c(2,2),
                      nrow = 5, ncol = 2)
 
-ggsave("Figures/Fig6b_GAM_temp.png", pall,  width = 7.5, height = 12)
+ggsave("Figures/Fig6b_GAM_temp.png", qall,  width = 155, 
+       height = 247, units = "mm", dpi = 600)
 
 # draws from posterior ----
 gam_samples_temp <- function(trait){

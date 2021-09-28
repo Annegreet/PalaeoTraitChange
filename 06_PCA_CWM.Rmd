@@ -75,20 +75,26 @@ l <- ggplot(pca_points, aes(x = PC1, y = PC2)) +
                    xend = PC1*9,
                    yend = PC2*9),
                arrow = arrow(length = unit(1/2, 'picas'))) +
-  annotate('text', x = (pca_load$PC1*12.5), y = (pca_load$PC2*10),
+  annotate('text', x = c(3.9,-5,-4.1, 4.85,5,
+                         -3.45,-3.07,-2.97,-1.94,5.1), 
+           y = c(-2.62,-1,1.49,-0.53,0.42,
+                 -1.47,4.47,-5.3,-6.07,-1.2),
            label = pca_load$variable,
-           size = 3.5) +
+           size = 4) +
   scale_x_continuous(name = paste0("PC1 (", round(100 * pca_sum$importance[2,"PC1"],2), "%)")) +
   scale_y_continuous(name = paste0("PC2 (", round(100 * pca_sum$importance[2,"PC2"],2), "%)")) +
   theme_bw() +
   theme(legend.position = "bottom",
-        text = element_text(size = 12)) +
+        text = element_text(size = 12),
+        legend.text = element_text(size = 12),
+        plot.margin=grid::unit(c(1,1,1,1), "cm")) +
   scale_color_manual(values = c("#999999","#E69F00"), 
                      aesthetics = c("colour", "fill"),
                      name = "") 
 l
 
-# ggsave("Figures/Fig3-PCA.png", l, dpi = 600, width = 170, height = 170, units = "mm")
+ggsave("Figures/Fig3-PCA.pdf", l, dpi = 600, width = 174, 
+       height = 174, units = "mm")
 
 pca_hull <- 
   pca_points %>% 
@@ -200,7 +206,9 @@ eumap <- ggplot() +
         axis.ticks = element_blank(),
         legend.position = "bottom") +
   facet_wrap(~time.bin, ncol = 3))
-ggsave("Figures/Fig4-PCA-map.png", pcamap, width = 7, height = 7, dpi = 600)
+ggsave("Figures/Fig4-PCA-map.pdf", pcamap,  
+       width = 174, 
+       height = 174, units = "mm", dpi = 600)
 
 ``` 
 
