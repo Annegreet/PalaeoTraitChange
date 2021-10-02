@@ -1,6 +1,6 @@
 # This script plots a map of the study site location and time span of the record
-# (Figure 1 in manuscript) and the temperature map (supplementary information 6)
-# Annegreet Veeken, last changed 29-7-2021
+# and the temperature map (supplementary information)
+# Annegreet Veeken
 
 library(tidyverse)
 library(ggplot2)

@@ -1,5 +1,5 @@
 ---
-title: "Explaining variables"
+title: ""
 output:
   html_document:
     df_print: paged
@@ -17,7 +17,7 @@ library(readxl)
 ## Defining agriculture in records
 ### Start of agriculture as defined by authors
 ```{r authors}
-meta <- read_xlsx("Data/Meta-analysis_PollenRecords.xlsx", sheet = 3)
+meta <- read_xlsx("Data/SelectedPollenRecords.xlsx")
 lPOL <- readRDS("RDS_files/03_PollenWEU-Harmonised.rds") 
 sitenames <- names(lPOL) %>% sort
 
@@ -126,13 +126,6 @@ euroevol <-
 euroevol
 ```
 
-
-
-## Likelihood of presence of agriculture
-No chance - none of the indicators indicate agriculture
-Potentially - 2/3 indicators indicate agriculture. At least ArchaeoGLOBE and or EuroEVOL/authors judgement
-Likely - 3/3 indicators indicate agriculture?
-
 ```{r compile}
 # make three dataframes with agriculture indicators
 # pastoral and/or arable
@@ -166,89 +159,6 @@ dfAGRI <- agricult %>%
          ) %>% 
   group_by(site.name) %>% 
   fill(PresenceAgri, .direction = "up") 
-dfAGRI
-dfAGRI %>% filter(is.na(PresenceAgri)) %>% View(.)
+
 saveRDS(dfAGRI, "RDS_files/Archaeological_indicators.rds") 
-```
-
-```{r plot agricultural indicators}
-# colour palette
-cbf <- c("#999999", "#E69F00", "#56B4E9", "#009E73", 
-         "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-
-p <- dfAGRI %>% 
-  filter(site.name %in% sitenames[1:10]) %>% 
-  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
-  geom_line(aes(colour = INAG), size = 1) +
-  scale_y_continuous("Summed probability density") +
-  scale_x_reverse("Years (BP)") +
-  ggtitle("Archaeological indicators") +
-  theme_bw() +
-  theme(legend.position = "none") +
-  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
-  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
-p
-p <- dfAGRI %>% 
-  filter(site.name %in% sitenames[11:20]) %>% 
-  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
-  geom_line(aes(colour = INAG), size = 1) +
-  scale_y_continuous("Summed probability density") +
-  scale_x_reverse("Years (BP)") +
-  ggtitle("Archaeological indicators") +
-  theme_bw() +
-  theme(legend.position = "none") +
-  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
-  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
-p
-p <- dfAGRI %>% 
-  filter(site.name %in% sitenames[21:30]) %>% 
-  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
-  geom_line(aes(colour = INAG), size = 1) +
-  scale_y_continuous("Summed probability density") +
-  scale_x_reverse("Years (BP)") +
-  ggtitle("Archaeological indicators") +
-  theme_bw() +
-  theme(legend.position = "none") +
-  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
-  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
-p
-p <- dfAGRI %>% 
-  filter(site.name %in% sitenames[31:40]) %>% 
-  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
-  geom_line(aes(colour = INAG), size = 1) +
-  scale_y_continuous("Summed probability density") +
-  scale_x_reverse("Years (BP)") +
-  ggtitle("Archaeological indicators") +
-  theme_bw() +
-  theme(legend.position = "none") +
-  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
-  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
-p
-p <- dfAGRI %>% 
-  filter(site.name %in% sitenames[41:50]) %>% 
-  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
-  geom_line(aes(colour = INAG), size = 1) +
-  scale_y_continuous("Summed probability density") +
-  scale_x_reverse("Years (BP)") +
-  ggtitle("Archaeological indicators") +
-  theme_bw() +
-  theme(legend.position = "none") +
-  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
-  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
-p
-p <- dfAGRI %>% 
-  filter(site.name %in% sitenames[51:60]) %>% 
-  ggplot(., aes(x = Time.BP, y = density, group = 1)) +
-  geom_line(aes(colour = INAG), size = 1) +
-  scale_y_continuous("Summed probability density") +
-  scale_x_reverse("Years (BP)") +
-  ggtitle("Archaeological indicators") +
-  theme_bw() +
-  theme(legend.position = "none") +
-  facet_wrap(vars(site.name), ncol = 1, strip.position = "left") + 
-  geom_vline(data = meta, aes(xintercept = FirstAgri, color = cbf[2])) 
-p
-
-#ggsave("Figures/temp.png", p, dpi = 600, height = 1200, units = "mm")
-
 ```

@@ -1,6 +1,6 @@
 # This script filters the pollen data, applies the ppe correction and calculates 
 # pollen percentages of trees and shrubs, unbinned, for use in the GAMS
-# Annegreet Veeken, last changed 5-8-2021
+# Annegreet Veeken
 
 # Libraries
 library(tidyverse)

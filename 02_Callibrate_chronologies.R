@@ -1,5 +1,5 @@
 # This script creates new chronologies for the pollen records from neotoma
-# Annegreet Veeken, last changed 4-8-2021
+# Annegreet Veeken
 
 # code source used as reference:
 # https://cran.r-project.org/web/packages/Bchron/vignettes/Bchron.html#running-the-bchronology-age-depth-model

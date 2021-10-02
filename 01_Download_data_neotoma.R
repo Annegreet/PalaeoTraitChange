@@ -1,6 +1,6 @@
 # This script downloads pollen records from the Neotoma database and creates
 # a meta-data xlsx published in supplementary information 2
-# Annegreet Veeken, last changed 28-7-2021
+# Annegreet Veeken
 
 # libraries
 library(neotoma)
@@ -9,12 +9,12 @@ library(readxl)
 library(xlsx)
 
 # load file that contains site names
-neotomasites.full <- 
-  read_xlsx("Data/Meta-analysis_PollenRecords.xlsx", sheet = "Sites with raw data")
+neotomasites_full <- 
+  read_xlsx("Data/SelectedPollenRecords.xlsx")
 
 # create vector with names of sites with pollen data in neotoma
 neotomasites <-
-  neotomasites.full %>% 
+  neotomasites_full %>% 
   filter(pollen == "y") %>% # only pollen data
   filter(Country %in% c("Ireland", "Great-Britain", 
                      "France","Germany", "Sweden", 
@@ -25,14 +25,15 @@ neotomasites <-
   pull(site.name) %>% sort() %>% strsplit(",") %>%  # create vector
   unlist() %>% unique()
 
+# add wildcards for search
 wildcard <- rep("*", length(neotomasites))
-neotomasites.wild <-
+neotomasites_wild <-
   neotomasites %>% str_replace("bog", "") %>%  str_trim() %>% 
-  str_c(wildcard, ., wildcard) # add wildcards for search
+  str_c(wildcard, ., wildcard) 
 
 # get site info
 ds_neotoma_site <-
-  neotomasites.wild %>% purrr::map( ~neotoma::get_site(.)) 
+  neotomasites_wild %>% purrr::map( ~neotoma::get_site(.)) 
 
 # get meta info of pollen data from sites
 # This line could run in to this error: 

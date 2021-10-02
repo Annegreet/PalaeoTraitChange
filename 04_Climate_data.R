@@ -14,9 +14,10 @@ library(colorspace)
 # Raster options
 rasterOptions(progress = "text")
 
-# Load CHELSA files -- on external hard drive now
+# Load CHELSA files -- too big to upload
+# download link: https://www.envidat.ch/#/metadata/chelsa_trace 
 temp <- list.files(
-  "C:/Users/lgxgv/OneDrive - The University of Nottingham/Data analysis/PhD/Meta-analysis/Hamburgian_Culture_Climate_Analysis/data/chelsa_lgm",
+  "file-path",
   pattern = "*.tif",
   full.names = T)
 

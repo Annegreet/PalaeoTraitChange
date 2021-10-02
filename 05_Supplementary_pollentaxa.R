@@ -1,7 +1,9 @@
+## THis script produces a summary table on the information 
+## available per pollen taxon, included in the supplementary information
+
 library(xlsx)
 library(tidyverse)
 
-## Summary table 1 for manuscript
 ## Species per pollen type list
 spec <- readRDS("RDS_files/01_PollenType_species.rds") %>% as_tibble()
 ppe <- read_xlsx("Data/RPP_Dataset_v1_Table_3_4.xlsx")

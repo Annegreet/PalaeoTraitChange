@@ -9,7 +9,7 @@ library(ggplot2)
 library(ggfortify)
 library(ggmap)
 ```
-
+This script produces the PCA (Figure 2,figure 3, table 1)
 ```{r prepare data}
 dfCWM <- readRDS("RDS_files/05_Posterior_alltraits_unbinned.rds")
 dfAGRI <- readRDS("RDS_files/Archaeological_indicators.rds") %>% 

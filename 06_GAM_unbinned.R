@@ -1,3 +1,6 @@
+# This script produces the GAMs (figure 4, 5a and 5b)
+# Annegreet Veeken
+
 # load packages
 library(tidyverse)
 library(ggplot2)
@@ -273,6 +276,18 @@ mylegend <- get_legend(p1)
 # set limits to be the same across GAM's
 p$LeafC <- p$LeafC +  scale_y_continuous(units$units[units$trait == "LeafC"],limits = c(425, 560)) 
 
+# increase margins
+p$PlantHeight <- p$PlantHeight + theme(plot.margin = grid::unit(c(0,0,0,1),"cm"))
+p$SLA <- p$SLA + theme(plot.margin = grid::unit(c(0,0.5,0,0.5),"cm"))
+p$LA <- p$LA + theme(plot.margin = grid::unit(c(0,0,0,1),"cm"))
+p2 <- p2 + theme(plot.margin = grid::unit(c(0,0.5,0,0.5),"cm"))
+p$LeafC <- p$LeafC + theme(plot.margin = grid::unit(c(0,0,0,1),"cm"))
+p$LeafN <- p$LeafN + theme(plot.margin = grid::unit(c(0,0.5,0,0.5),"cm"))
+p$LeafP <- p$LeafP + theme(plot.margin = grid::unit(c(0,0,0,1),"cm"))
+p$Seed.count <- p$Seed.count + theme(plot.margin = grid::unit(c(0,0.5,0,0.5),"cm"))
+p$Seed.lenght <- p$Seed.lenght + theme(plot.margin = grid::unit(c(0,0,0,1),"cm"))
+p$Seed.mass <- p$Seed.mass + theme(plot.margin = grid::unit(c(0,0.5,0,0.5),"cm"))
+
 windows()
 pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p2, p$LeafC,
                      p$LeafN, p$LeafP, p$Seed.count, p$Seed.lenght, p$Seed.mass,
@@ -285,6 +300,9 @@ pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p2, p$LeafC,
                     widths = c(2,2,0.5))
 
 ggsave("Figures/Fig5-GAM_time.png", pall, width = 174, 
+                    mylegend, nrow = 5, ncol = 3, widths = c(2,2,0.5))
+
+ggsave("Figures/Fig5-GAM_time.pdf", pall, width = 174, 
        height = 247, units = "mm", dpi = 600)
 
 # draws from posteriors for all traits----
@@ -566,6 +584,20 @@ p2
 # Set common scale
 p$LeafC <- p$LeafC +  scale_y_continuous(units$units[units$trait == "LeafC"],limits = c(425, 560)) 
 
+
+# Increase margins
+p$PlantHeight <- p$PlantHeight + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p$SLA <- p$SLA + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+p$LA <- p$LA + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p2 <- p2 + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+p$LeafC <- p$LeafC + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p$LeafN <- p$LeafN + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+p$LeafP <- p$LeafP + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p$Seed.count <- p$Seed.count + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+p$Seed.lenght <- p$Seed.lenght + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p$Seed.mass <- p$Seed.mass + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+
+
 windows()
 pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p2, p$LeafC,
                      p$LeafN, p$LeafP, p$Seed.count, p$Seed.lenght, p$Seed.mass,
@@ -575,6 +607,7 @@ pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p2, p$LeafC,
                                            c(7,8,NA),
                                            c(9,10,NA)),
                      mylegend, nrow = 5, ncol = 3, widths = c(2,2,0.5))
+
 
 ggsave("Figures/Fig6a_GAM_arrival_agri.png", pall,
        width = 174, 
@@ -685,9 +718,31 @@ q2 <- ggplot(data = CWM, aes(x = temp, y = Mean)) +
   theme(legend.position = "none",
         text = element_text(size = 10))
 
+
 # set same axis limits
 q$LeafC <- q$LeafC +  scale_y_continuous(units$units[units$trait == "LeafC"],limits = c(425, 560)) 
 
+# Increase margins
+p$PlantHeight <- p$PlantHeight + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p$SLA <- p$SLA + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+p$LA <- p$LA + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p2 <- p2 + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+p$LeafC <- p$LeafC + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p$LeafN <- p$LeafN + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+p$LeafP <- p$LeafP + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p$Seed.count <- p$Seed.count + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+p$Seed.lenght <- p$Seed.lenght + theme(plot.margin = grid::unit(c(0,0.1,0,1),"cm"))
+p$Seed.mass <- p$Seed.mass + theme(plot.margin = grid::unit(c(0,0.5,0,0.6),"cm"))
+
+windows()
+pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p2, p$LeafC,
+                     p$LeafN, p$LeafP, p$Seed.count, p$Seed.lenght, p$Seed.mass,
+                     layout_matrix = rbind(c(1,2),
+                                           c(3,4),
+                                           c(5,6),
+                                           c(7,8),
+                                           c(9,10)),
+                     mylegend, nrow = 5, ncol = 3, widths = c(2,2,0.5))
 
 windows()
 qall <- grid.arrange(q$PlantHeight, q$SLA, q$LA, q2, q$LeafC, q$LeafN, q$LeafP,
@@ -702,6 +757,7 @@ qall <- grid.arrange(q$PlantHeight, q$SLA, q$LA, q2, q$LeafC, q$LeafN, q$LeafP,
 
 ggsave("Figures/Fig6b_GAM_temp.png", qall,  width = 155, 
        height = 247, units = "mm", dpi = 600)
+
 
 # draws from posterior ----
 gam_samples_temp <- function(trait){

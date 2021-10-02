@@ -1,6 +1,6 @@
 # This script creates a conversion table for pollen type to species based on the current 
 # distribution of terrestrial species belonging to the pollen taxon in NW-europe
-# Annegreet Veeken, last changed 28-7-2021
+# Annegreet Veeken
 
 # libraries
 library(rgbif)

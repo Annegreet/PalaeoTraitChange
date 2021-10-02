@@ -1,5 +1,5 @@
 # This script harmonizes pollen nomenclature and adds the new chronologies to the records
-# Annegreet Veeken, last changed 28-7-2021
+# Annegreet Veeken
 
 library(neotoma)
 library(tidyverse)
