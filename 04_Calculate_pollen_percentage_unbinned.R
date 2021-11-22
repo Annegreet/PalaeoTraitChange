@@ -22,7 +22,7 @@ harm <- harm %>%
 lPOLlong <- lPOL %>% 
   purrr::map(.,
              ~dplyr::select_if(., !names(.) %in%
-                                 c(".id", "depth", "age.old", "age.young",
+                                 c(".id", "age.old", "age.young",
                                    "date.type", "lat", "long", "dataset"))) %>%
   purrr::map(., ~gather(., key = "taxa", value = "count", -c(1:4)))
 
@@ -40,11 +40,11 @@ lPOLlong <- lPOLlong %>%
   # filter no ppe data
   purrr::map(., ~ filter(., !ppe.taxon %in%  c("no ppe")) %>% 
                # select relevant columns
-               dplyr::select(site.name, age, time.bin, 
-                             Time.BP, taxa, GroupId, ppe.taxon,
+               dplyr::select(site.name, age, depth, time.bin, 
+                             taxa, GroupId, ppe.taxon,
                              count))
 
-# calculate percentage per time bin, ppe corrected
+# calculate percentage ppe corrected
 lPOLcorrected <-  lPOLlong %>%
   purrr::map(. %>%
                # bind ppe data
@@ -52,7 +52,7 @@ lPOLcorrected <-  lPOLlong %>%
                # adjust count with ppe
                mutate(adjustedcount = count*PPE) %>%
                group_by(age) %>% 
-               # calculate percetages
+               # calculate percentages
                mutate(adjustedpercent = adjustedcount/sum(adjustedcount),
                       percent = count/sum(count, na.rm = TRUE)) %>%
                group_by(age, ppe.taxon) %>%
@@ -68,3 +68,43 @@ lPOLcorrected <-  lPOLlong %>%
 
 saveRDS(lPOLcorrected, "RDS_files/04_PollenWEU-PPEcorrected-unbinned.rds")
 
+
+lPOLcorrected_herbs <-  lPOLlong %>%
+  purrr::map(. %>%
+               # bind ppe data
+               left_join(., ppe, by = "ppe.taxon") %>% 
+               # filter for herbs 
+               filter(GroupId == "HERB") %>% 
+               # adjust count with ppe
+               mutate(adjustedcount = count*PPE) %>%
+               group_by(age) %>% 
+               # calculate percentages
+               mutate(adjustedpercent = adjustedcount/sum(adjustedcount),
+                      percent = count/sum(count, na.rm = TRUE)) %>%
+               group_by(age, ppe.taxon) %>%
+               summarise(adjustedpercent = sum(adjustedpercent, na.rm = TRUE),
+                         percent = sum(percent)) %>% 
+               # sort
+               arrange(age, ppe.taxon))
+
+saveRDS(lPOLcorrected_herbs, "RDS_files/04_PollenWEU-PPEcorrected-HERBS.rds")
+
+lPOLcorrected_trees <-  lPOLlong %>%
+  purrr::map(. %>%
+               # bind ppe data
+               left_join(., ppe, by = "ppe.taxon") %>% 
+               # filter for trees 
+               filter(GroupId == "TRSH") %>% 
+               # adjust count with ppe
+               mutate(adjustedcount = count*PPE) %>%
+               group_by(age) %>% 
+               # calculate percentages
+               mutate(adjustedpercent = adjustedcount/sum(adjustedcount),
+                      percent = count/sum(count, na.rm = TRUE)) %>%
+               group_by(age, ppe.taxon) %>%
+               summarise(adjustedpercent = sum(adjustedpercent, na.rm = TRUE),
+                         percent = sum(percent)) %>% 
+               # sort
+               arrange(age, ppe.taxon))
+
+saveRDS(lPOLcorrected_trees, "RDS_files/04_PollenWEU-PPEcorrected-TRSH.rds")
