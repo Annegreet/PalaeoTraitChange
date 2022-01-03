@@ -107,9 +107,13 @@ TORcal <- with(TORage,
                           ids = LabID,
                           positionThicknesses = rep(1, nrow(TORage)),
                           predictPositions = TOR$Sample))
-plot(TORcal)
-kable(TORage,format="markdown", caption= "Uncalibrated radiocarbon dates of Torran Beithe")
-
+TORuncer <- 
+    Bchron:::predict.BchronologyRun(
+      TORcal,
+      newPositions = TOR$Sample)
+saveRDS(TORuncer,
+        "RDS_files/02_Calibrated_chronology_age_uncertainties_Torran Beithe.rds")
+  
 CARcal <- with(CARage,
               Bchronology(ages = Age, ageSds = AgeSD, 
                 calCurves = calCurve,
@@ -117,8 +121,12 @@ CARcal <- with(CARage,
                 ids = LabID,
                 positionThicknesses = rep(1, nrow(CARage)),
                 predictPositions = CAR$Sample))
-plot(CARcal)
-kable(CARage, format = "markdown", caption = "Uncalibrated radiocarbon dates Carrach Mor")
+CARuncer <- 
+    Bchron:::predict.BchronologyRun(
+      TORcal,
+      newPositions = CAR$Sample)
+saveRDS(CARuncer,
+        "RDS_files/02_Calibrated_chronology_age_uncertainties_Camban.rds")
 
 CAMcal <- with(CAMage,
               Bchronology(ages = Age, ageSds = AgeSD, 
@@ -127,8 +135,12 @@ CAMcal <- with(CAMage,
                           ids = LabID,
                           positionThicknesses = rep(1, nrow(CAMage)),
                           predictPositions = CAM$Sample))
-plot(CAMcal)
-#kable(CAMage, format = "markdown", caption = "Uncalibrated radiocarbon dates Camban")
+CAMuncer <- 
+    Bchron:::predict.BchronologyRun(
+      TORcal,
+      newPositions = CAM$Sample)
+saveRDS(CAMuncer,
+        "RDS_files/02_Calibrated_chronology_age_uncertainties_Camban.rds")
 
 MORcal <- with(MORage,
               Bchronology(ages = Age, ageSds = AgeSD, 
@@ -137,14 +149,18 @@ MORcal <- with(MORage,
                           ids = LabID,
                           positionThicknesses = rep(1, nrow(MORage)),
                           predictPositions = MOR$Sample))
-plot(MORcal)
-kable(MORage, format =  "markdown", caption = "Uncalibrated radiocarbon dates Morvich")
-
+MORuncer <- 
+    Bchron:::predict.BchronologyRun(
+      TORcal,
+      newPositions = MOR$Sample)
+saveRDS(MORuncer,
+        "RDS_files/02_Calibrated_chronology_age_uncertainties_Morvich.rds")
 ```
 
 ```{r create df same format as neotoma data sets }
 
-dfTOR <- data.frame(site.name = "Torran Beithe",
+dfTOR <- data.frame(.id = "1",
+                    site.name = "Torran Beithe",
                     depth = TOR$Sample,
                     age = apply(TORcal$thetaPredict, 2, "quantile", 
                                 probs = 0.5), 
@@ -158,7 +174,8 @@ dfTOR <- data.frame(site.name = "Torran Beithe",
                     dataset = 1, 
                     TOR[,-1])
 
-dfCAR <- data.frame(site.name = "Carrach Mor",
+dfCAR <- data.frame(.id = "2",
+                    site.name = "Carrach Mor",
                     depth = CAR$Sample,
                     age = apply(CARcal$thetaPredict, 2, "quantile", 
                                 probs = 0.5), 
@@ -169,10 +186,11 @@ dfCAR <- data.frame(site.name = "Carrach Mor",
                     date.type = "Bchron", 
                     lat = 57.236423,
                     long =-5.15484569, 
-                    dataset = 1, 
+                    dataset = 2, 
                     CAR[,-1])
 
-dfCAM <- data.frame(site.name = "Camban",
+dfCAM <- data.frame(.id = "3",
+                    site.name = "Camban",
                     depth = CAM$Sample,
                     age = apply(CAMcal$thetaPredict, 2, "quantile", 
                                 probs = 0.5), 
@@ -180,12 +198,14 @@ dfCAM <- data.frame(site.name = "Camban",
                                     probs = 1 - (1 - 0.95)/2), 
                     age.young = apply(CAMcal$thetaPredict, 2, "quantile", 
                                      probs = (1 - 0.95)/2),
-                    date.type = "Bchron",                     lat = 57.213091, 
+                    date.type = "Bchron",                     
+                    lat = 57.213091, 
                     long = -5.2240879, 
-                    dataset = 1, 
+                    dataset = 3, 
                     CAM[,-1])
 
-dfMOR <- data.frame(site.name = "Morvich",
+dfMOR <- data.frame(.id = "4",
+                    site.name = "Morvich",
                     depth = MOR$Sample,
                     age = apply(MORcal$thetaPredict, 2, "quantile", 
                                 probs = 0.5), 
@@ -194,8 +214,8 @@ dfMOR <- data.frame(site.name = "Morvich",
                     age.young = apply(MORcal$thetaPredict, 2, "quantile", 
                                      probs = (1 - 0.95)/2),
                     date.type = "Bchron", 
-                    lat = NA, 
-                    long = NA, 
+                    lat = 57.2353580,  
+                    long = -5.3799564,
                     dataset = 1, 
                     MOR[,-1])
 
@@ -223,7 +243,7 @@ lPOL <- lPOL %>%
 )))
 
 
-saveRDS(davies, "RDS_files/01_Pollen-Adavies.rds")
+saveRDS(lPOL, "RDS_files/01_Pollen-Adavies.rds")
 
 ```
 
