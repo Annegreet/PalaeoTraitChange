@@ -1,129 +1,74 @@
 # This script harmonizes pollen nomenclature and adds the new chronologies to the records
 # Annegreet Veeken
 
-library(neotoma)
+# Load libraries
+library(neotoma) # for compile_downloads function
 library(tidyverse)
 library(readxl)
 library(magrittr) # set colnames function
 
 # load pollen data sets and conversion table
-pollen.equiv <- read_xlsx("Data/HarmonizationTablePollen.xlsx")
+harm <- read_xlsx("Data/HarmonizationTablePollen_EPD_mottl.xlsx") %>% 
+  select(VarName, Crop, ppe.taxon, GroupID, AccVarName) %>% 
+  distinct
 ds_neotoma <- readRDS("RDS_files/01-NeotomaSites-W-Europe.rds")
 ds_davies <- readRDS("RDS_files/01_Pollen-Adavies.rds") %>% 
   purrr::map(., ~mutate(.,site.name = as.character(site.name)))
 
+# Harmonize nomenclature----
+# compile neotoma datasets to one df per site
 lPOL <- 
   ds_neotoma %>% 
   purrr::map(., ~compile_downloads(.)) 
-# Append pollen from Davies
-lPOL <- append(lPOL, ds_davies)
 
 # name list
 sitenames <- 
   lPOL %>% 
-  purrr::map(., ~pull(., "site.name") %>% as.character() %>% unique()) %>% 
+  purrr::map(., ~pull(., "site.name") %>% unique()) %>% 
   unlist %>% as.character() 
 names(lPOL) <- sitenames
 
-#create categorical variable for time period
-timecat <- seq(from = 0, to = 10500, by = 500)
-timecat.lab <- labels(timecat)
-dftimecat <- bind_cols(Time.BP = timecat, time.bin = timecat.lab)
-timecat.lab[23] <- "23"
-
-lPOL <- lPOL %>% 
-  purrr::map(., 
-             ~mutate(., time.bin = cut(as.numeric(age), 
-                                       breaks = c(-Inf, timecat, Inf), 
-                                       labels = timecat.lab)) %>% 
-               left_join(dftimecat, by = "time.bin"))
-# add calibrated chronologies to the dataframes
-
-# split pollen data from rest of the variables
-lPOlvar <- lPOL %>% 
-  purrr::map(., ~select_if(., names(.) %in% 
-                            c(".id", "site.name", "depth", 
-                              "age", "age.old", "age.young", 
-                              "date.type", "lat", "long", 
-                              "dataset", "time.bin", "Time.BP")))
-lPOL <- lPOL %>% 
-  purrr::map(., ~select_if(., ! names(.) %in% 
-                             c(".id", "site.name", "depth", 
-                               "age", "age.old", "age.young", 
-                               "date.type", "lat", "long", 
-                               "dataset", "time.bin", "Time.BP")))
-# harmonize taxa
-harmonize.taxa <- function(x){
-taxon.matches <- match(colnames(x), 
-                       pollen.equiv$VarName)
-used.taxa <- pollen.equiv[taxon.matches, ]
-x <- x %>% set_colnames(used.taxa$AccVarName2)
-x <- t(rowsum(t(x), group = colnames(x), na.rm = T))
-}
-
-# add missing taxa to HamonizePOllenTaxa file
-# tax <- lPOL %>% purrr::map(., ~colnames(.)) %>% unlist %>% unique(.)
-# x <- tax[!tax %in% pollen.equiv$VarName]
-# write.csv(x, "temp.csv")
-# 
-
-lPOL <- lPOL %>% 
-  purrr::map(., ~harmonize.taxa(.))
-
-lPOLharm <- purrr::map2(lPOlvar, lPOL, ~cbind.data.frame(.x, .y)) 
-
-# Check for missing column names
-# natax <- lPOLfinal %>% purrr::map(., ~colnames(.) %>% anyNA) 
-
-# add new chronologies from bchron
-lCAL <- readRDS("RDS_files/02_Calibrated_chronologies.rds") %>% 
+# convert to long format
+POLlong <- lPOL %>% 
+  purrr::map(.,~pivot_longer(.,!.id:dataset, names_to = "taxa", values_to = "count") %>% 
+               select(-age:-date.type) %>% 
+               left_join(harm, by = c("taxa" = "VarName"))) %>% 
   bind_rows() %>% 
-  group_split(site.name)
+  select(-.id) %>% 
+  mutate(dataset = as.numeric(dataset)) %>% 
+  mutate(site.name = recode(site.name, Vladař = "Vladar"))
 
-calnames <- 
-  lCAL %>% 
-  purrr::map(., ~pull(., "site.name") %>% as.character() %>% unique()) %>% unlist
-names(lCAL) <- calnames
+# add new chronologies from bchron ----
+CAL <- readRDS("RDS_files/02_Calibrated_chronologies.rds") %>% 
+  bind_rows() %>% 
+  mutate(dataset = as.numeric(dataset))
 
-addchron <- function(site.name){
-  if(site.name %in% calnames) {
-lPOLharm[[site.name]] <- lPOLharm[[site.name]] %>% select(-age:-date.type) %>% 
-  left_join(lCAL[[site.name]], by = c("site.name","depth",".id" = "dataset")) %>% 
-  select(.id, site.name, depth, age, age.old, age.young, date.type, everything())
-  } 
-  else{
-    lPOLharm[[site.name]]
-  }
-}
+POLcal <- 
+  left_join(POLlong, CAL, by = c("site.name", "dataset", "depth"))
 
-lPOLcal <- purrr::map(sitenames, ~addchron(.x))
+# Append pollen from Davies
+DAVIES <- ds_davies %>% 
+  purrr::map(.,~pivot_longer(.,!.id:dataset, names_to = "taxa", values_to = "count") %>% 
+               left_join(harm, by = c("taxa" = "VarName"))) %>% 
+  bind_rows() %>% 
+  select(-.id) %>% 
+  mutate(dataset = as.numeric(dataset))
 
-# check for missing chronologies
-lPOLcal %>% purrr::map(., ~pull(., date.type) %>% unique) %>% unlist
-lPOLcal[[75]] <- lPOLcal[[75]] %>% mutate(site.name = "Vladar") %>% 
-    select(-age:-date.type) %>% 
-    left_join(lCAL[["Vladar"]], by = c("site.name","depth",".id" = "dataset")) %>% 
-    select(.id, site.name, depth, age, age.old, age.young, date.type, everything()) # Vladar didnt join because of spelling
-lPOLcal[[7]] <- lPOLcal[[7]] %>% 
-  filter(!is.na(age)) # Carquefou has 2 dated and 1 undated core
-lPOLcal[[23]] <- lPOLcal[[23]] %>% 
-  filter(!is.na(age)) # Holzmaar has 1 dated and 1 undated core
-lPOLcal[[26]] <- lPOLcal[[26]] %>% 
-  filter(!is.na(age)) # il fuorn has 1 dated and 1 core  of which chronological info is missing
-lPOLcal[[37]] <- lPOLcal[[37]] %>% 
-  filter(!is.na(age)) # Lago di Origlio has 1 radiocarbon dated and 1 pb dated core 
-lPOLcal[[38]] <- lPOLcal[[38]] %>% 
-  filter(!is.na(age)) # Lake of Annency has 1 dated and 1 undated core
-
-# name list
-polcalnames <- lPOLcal %>% 
-  purrr::map(., ~pull(., site.name) %>% unique) %>% unlist
-names(lPOLcal) <- polcalnames
-
-# delete sites without proper chronology
-lPOLcal[["Krageholmssjön"]] <- NULL # only biostratigraphy
-lPOLcal[["Puy des Gouttes"]] <- NULL # only 1 radiocarbon date
-lPOLcal[["Lac de Pavin"]] <- NULL # only biostratigraphy
+lPOLcal <- bind_rows(POLcal, DAVIES) %>% 
+  # replace NA in count by 0
+  mutate(count = replace_na(count, 0)) %>% 
+  # remove sites without proper chronology
+  filter(!is.na(date.type)) %>% 
+  group_split(site.name) 
+  
+# Carquefou has 2 dated and 1 undated core
+# Holzmaar has 1 dated and 1 undated core
+# il fuorn has 1 dated and 1 core  of which chronological info is missing
+# Lago di Origlio has 1 radiocarbon dated and 1 pb dated core 
+# Lake of Annency has 1 dated and 1 undated core
+# Krageholmssjön # only biostratigraphy
+# Puy des Gouttes # only 1 radiocarbon date
+# Lac de Pavin # only biostratigraphy
 
 saveRDS(lPOLcal, "RDS_files/03_PollenWEU-Harmonised.rds")
-
+ 
