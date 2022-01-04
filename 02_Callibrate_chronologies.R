@@ -128,7 +128,7 @@ calage <- purrr::map2(l, chronid,  ~tibble(age = apply(.x$thetaPredict, 2, "quan
                                            site.name = .y[[1]],
                                            dataset = .y[[2]],
                                            date.type = "Bchron")
-) 
+                      ) 
 
 saveRDS(calage, "RDS_files/02_Calibrated_chronologies.rds")
 
@@ -159,10 +159,6 @@ corename <- files %>%
   str_remove(., "02_Calibrated_chronology_age_uncertainties_") %>% 
   str_remove(., ".rds")
 
-corename <- files %>% 
-  str_remove(., "02_Calibrated_chronology_age_uncertainties_") %>% 
-  str_remove(., ".rds")
-  
 folderpath.fun <- function(x)
 {paste("RDS_files/", x, sep = "/")}
 
@@ -177,6 +173,6 @@ age_list <- files %>%
                        # add site.name and dataset id
                   corename = .y, .before = V1) %>% 
                 separate(corename, into = c("site.name", "dataset.id"), 
-                         sep = "_", convert = TRUE)) 
+                         sep = "_", convert = TRUE))
 
 saveRDS(age_list, "RDS_files/02_Calibrated_chronologies_uncertainties.rds")
