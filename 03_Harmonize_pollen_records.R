@@ -13,13 +13,16 @@ harm <- read_xlsx("Data/HarmonizationTablePollen_EPD_mottl.xlsx") %>%
   distinct
 ds_neotoma <- readRDS("RDS_files/01-NeotomaSites-W-Europe.rds")
 ds_davies <- readRDS("RDS_files/01_Pollen-Adavies.rds") %>% 
-  purrr::map(., ~mutate(.,site.name = as.character(site.name)))
+  purrr::map(., ~mutate(., site.name = as.character(site.name)))
 
 # Harmonize nomenclature----
 # compile neotoma datasets to one df per site
 lPOL <- 
   ds_neotoma %>% 
   purrr::map(., ~compile_downloads(.)) 
+# change "Vladař" to Vladar to avoid complications with matching
+lPOL[[75]] <- lPOL[[75]] %>% 
+  mutate(site.name = "Vladar")
 
 # name list
 sitenames <- 
@@ -35,8 +38,7 @@ POLlong <- lPOL %>%
                left_join(harm, by = c("taxa" = "VarName"))) %>% 
   bind_rows() %>% 
   select(-.id) %>% 
-  mutate(dataset = as.numeric(dataset)) %>% 
-  mutate(site.name = recode(site.name, Vladař = "Vladar"))
+  mutate(dataset = as.numeric(dataset))
 
 # add new chronologies from bchron ----
 CAL <- readRDS("RDS_files/02_Calibrated_chronologies.rds") %>% 
@@ -59,6 +61,7 @@ lPOLcal <- bind_rows(POLcal, DAVIES) %>%
   mutate(count = replace_na(count, 0)) %>% 
   # remove sites without proper chronology
   filter(!is.na(date.type)) %>% 
+  filter(age < 10000) %>% 
   group_split(site.name) 
   
 # Carquefou has 2 dated and 1 undated core
