@@ -123,10 +123,10 @@ CARcal <- with(CARage,
                 predictPositions = CAR$Sample))
 CARuncer <- 
     Bchron:::predict.BchronologyRun(
-      TORcal,
+      CARcal,
       newPositions = CAR$Sample)
 saveRDS(CARuncer,
-        "RDS_files/02_Calibrated_chronology_age_uncertainties_Camban.rds")
+        "RDS_files/02_Calibrated_chronology_age_uncertainties_Carrach Mor.rds")
 
 CAMcal <- with(CAMage,
               Bchronology(ages = Age, ageSds = AgeSD, 
@@ -137,7 +137,7 @@ CAMcal <- with(CAMage,
                           predictPositions = CAM$Sample))
 CAMuncer <- 
     Bchron:::predict.BchronologyRun(
-      TORcal,
+      CAMcal,
       newPositions = CAM$Sample)
 saveRDS(CAMuncer,
         "RDS_files/02_Calibrated_chronology_age_uncertainties_Camban.rds")
@@ -151,7 +151,7 @@ MORcal <- with(MORage,
                           predictPositions = MOR$Sample))
 MORuncer <- 
     Bchron:::predict.BchronologyRun(
-      TORcal,
+      MORcal,
       newPositions = MOR$Sample)
 saveRDS(MORuncer,
         "RDS_files/02_Calibrated_chronology_age_uncertainties_Morvich.rds")
