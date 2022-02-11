@@ -19,7 +19,9 @@ library(readxl)
 ```{r authors}
 meta <- read_xlsx("Data/SelectedPollenRecords.xlsx")
 lPOL <- readRDS("RDS_files/03_PollenWEU-Harmonised.rds") 
-sitenames <- names(lPOL) %>% sort
+sitenames <- lPOL %>% 
+  purrr::map(., ~pull(.,site.name)) %>% unlist %>% 
+  unique()
 
 #select relevant sites
 meta <- meta %>% 
@@ -29,15 +31,16 @@ meta <- meta %>%
   arrange(site.name)  
 
 authors <- lPOL %>% 
-  purrr::map(., ~left_join(., meta, by = "site.name") %>% 
-               dplyr::select(.,site.name, depth, age, First.agriculture) %>% 
+  purrr::map(., ~select(.,site.name, depth, age) %>%
+               distinct() %>% 
+               left_join(., meta, by = "site.name") %>% 
                mutate(., author = case_when(
                                   as.numeric(First.agriculture) > age ~ 1,
                                   as.numeric(First.agriculture) < age ~ 0,
-                                  First.agriculture == "before start of record" ~ 2,                  
-                                  First.agriculture == "pastoral agriculture before start of the record" ~ 2)
-                      )
-             ) %>% 
+                                  First.agriculture == 
+                                    "before start of record" ~ 2,                
+                                  First.agriculture == 
+                                    "pastoral agriculture before start of the record" ~ 2))) %>% 
   bind_rows() %>% 
   dplyr::select(site.name, depth, age, everything()) %>% 
   arrange(site.name, age) %>% 
@@ -136,7 +139,7 @@ agricult <- authors %>%
                           labels = c(1,1:length(unique(euroevol$Time.BP))))) %>% 
   left_join(., archaeoglobe, by = c("site.name","timecat")) %>% 
   left_join(., euroevol, by = c("site.name", "timecat2")) %>% 
-  dplyr::select(site.name, age, EXAG, INAG, PAS, author,
+  dplyr::select(site.name, age, depth, EXAG, INAG, PAS, author,
                 density)
 agricult
 ```
