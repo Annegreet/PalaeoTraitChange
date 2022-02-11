@@ -16,7 +16,8 @@ lat <- lPOL %>%
   purrr::map(., ~pull(.,lat) %>% unique) %>% unlist 
 long <- lPOL %>% 
   purrr::map(., ~pull(.,long) %>% unique) %>% unlist 
-sitenames <- names(lPOL)
+sitenames <- lPOL %>% 
+  purrr::map(., ~pull(.,site.name) %>% unique) %>% unlist
 age.old <- lPOL %>% 
   purrr::map(., ~pull(.,age) %>% max(.)) %>% unlist
 age.young <- lPOL %>% 
@@ -63,7 +64,7 @@ pubmap <- eumap +
         axis.ticks = element_blank()) 
 pubmap
 
-ggsave("Figures/Fig1-MapStudySites.png", pubmap, dpi = 600,
+ggsave("Figures/SI2-MapStudySites.png", pubmap, dpi = 600,
        width = 170, height = 114, units = "mm")
 
 
