@@ -47,4 +47,4 @@ lPOLcorrected <-  lPOL %>%
 # check
 lPOLcorrected[[1]]
 
-saveRDS(lPOLcorrected, "RDS_files/03_TRSH_percentage.rds")
+saveRDS(lPOLcorrected, "RDS_files/03_TRSH_percentage_unbinned.rds")
