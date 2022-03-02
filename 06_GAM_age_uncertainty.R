@@ -203,7 +203,11 @@ plot_gam <- function(selectedtrait){
 q <- purrr::map(trait, ~plot_gam(.))
 names(q) <- trait
 qall <- grid.arrange(q$PlantHeight, q$SLA, q$LA, q$LDMC, q$LeafC, q$LeafN, q$LeafP,
+<<<<<<< HEAD
                      q$Seed.count, q$Seed.length, q$Seed.mass,
+=======
+                     q$Seed.length, q$Seed.count,  q$Seed.mass,
+>>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
                      layout_matrix = rbind(c(1,2),
                                            c(3,4),
                                            c(5,6),
@@ -327,7 +331,11 @@ plot_gam2 <- function(selectedtrait){
   
   # plot fitted models
   p <- ggplot(data = jam_values2, aes(x = x, y = exp(fit + intercept), group = agedraw)) +
+<<<<<<< HEAD
     geom_line(col = "darkgreen") +
+=======
+    geom_line(cpl = "darkgreen") +
+>>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
     scale_y_continuous(paste(units$units[units$trait == selectedtrait]), trans = "log10",
                        limits = c(units$ymin[units$trait == selectedtrait],
                                   units$ymax[units$trait == selectedtrait])) +
@@ -401,10 +409,17 @@ plot_gam3 <- function(selectedtrait){
 }
 
 windows()
+<<<<<<< HEAD
 l <- purrr::map(trait, ~plot_gam3(.))
 names(l) <- trait
 lall <- grid.arrange(l$PlantHeight, l$SLA, l$LA, l$LDMC, l$LeafC, l$LeafN, l$LeafP,
                      l$Seed.count, l$Seed.length, l$Seed.mass,
+=======
+p <- purrr::map(trait, ~plot_gam3(.))
+names(p) <- trait
+pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p$LDMC, p$LeafC, p$LeafN, p$LeafP,
+                     p$Seed.count, p$Seed.length, p$Seed.mass,
+>>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
                      layout_matrix = rbind(c(1,2),
                                            c(3,4),
                                            c(5,6),
@@ -413,7 +428,14 @@ lall <- grid.arrange(l$PlantHeight, l$SLA, l$LA, l$LDMC, l$LeafC, l$LeafN, l$Lea
                      widths = c(2,2),
                      nrow = 5, ncol = 2)
 
+<<<<<<< HEAD
 ggsave("Figures/SI5-GAM_temp_age_uncertainty.png", lall, width = 174, 
        height = 247, units = "mm", dpi = 600)
 }
 graphics.off()
+=======
+ggsave("Figures/SI5-GAM_temp_age_uncertainty.png", qall, width = 174, 
+       height = 247, units = "mm", dpi = 600)
+}
+graphics.off()
+>>>>>>> 7af38889830c182ba986eac81e6030859a4e4614

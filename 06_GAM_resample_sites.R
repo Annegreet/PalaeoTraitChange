@@ -149,6 +149,7 @@ furrr::future_map(sitenames, ~gam_func(trait[9], sitename = .x), .options = furr
 plan(multisession(workers = 4))
 furrr::future_map(sitenames, ~gam_func(trait[10], sitename = .x), .options = furrr_options(seed = TRUE))
 }
+<<<<<<< HEAD
 
 if(1){
 # Plot  GAM1 ----
@@ -159,6 +160,18 @@ files <- list.files("RDS_files/") %>%
   str_subset(paste0("_", selectedtrait))
 files
 
+=======
+
+if(1){
+# Plot  GAM's ----
+# extract fitted model from jam object
+plot_gam <- function(selectedtrait) {
+files <- list.files("RDS_files/") %>% 
+  str_subset("06_GAM_resample_sites_") %>% 
+  str_subset(paste0("_", selectedtrait))
+files
+
+>>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
 folderpath.fun <- function(x)
 {paste("RDS_files", x, sep = "/")}
 
@@ -291,6 +304,7 @@ furrr::future_map(agrisites, ~gam_func2(trait[9], sitename = .x), .options = fur
 plan(multisession(workers = 4))
 furrr::future_map(agrisites, ~gam_func2(trait[10], sitename = .x), .options = furrr_options(seed = TRUE))
 }
+<<<<<<< HEAD
 
 # Plot  GAM2 ----
 if(1){
@@ -307,6 +321,24 @@ sites <- files %>%
 folderpath.fun <- function(x)
   {paste("RDS_files/", x, sep = "/")}
 
+=======
+
+# Plot  GAM's agriculture ----
+if(1){
+plot_gam2 <- function(selectedtrait){
+files <- list.files("RDS_files/") %>% 
+  str_subset("06_GAM2_resample_sites_") %>% 
+  str_subset(paste0("_", selectedtrait))
+files
+
+sites <- files %>% 
+  str_remove(paste0("06_GAM2_resample_sites_",selectedtrait, "_")) %>% 
+  str_remove(".rds")
+
+folderpath.fun <- function(x)
+  {paste("RDS_files/", x, sep = "/")}
+
+>>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
 jam_sites <- files %>% 
   folderpath.fun(.) %>% 
   purrr::map(~readRDS(.))
