@@ -52,7 +52,7 @@ s3 <- left_join(ppe, polperc, by = "ppe.taxon") %>%
 # write.xlsx(s3, file = "Output/06_Summary_table_pollentypes.xlsx")
 
 ## S7 Trait estimates----
-pol <- tibble(ID = 1:47, pollentaxon = pollentaxa)
+pol <- tibble(ID = 1:47, pollentaxon = sort(pollentaxa))
 dfMEAN <- read_rds("RDS_files/05_multivariate_taxon_mean_100.rds") %>% 
   as.data.frame() %>% 
   rownames_to_column("parameter") %>%
@@ -110,7 +110,7 @@ df <- left_join(dfMEAN,dfSD, by = c("pollentaxon", "trait")) %>%
          MeanSD = paste(Mean, "±", SD)) %>% 
   select(pollentaxon,trait, MeanSD) %>% 
   pivot_wider(., names_from = trait, values_from = MeanSD) %>% 
-  mutate( LA = str_remove(LA, "\\.(.*?)[:space:]"),
+  mutate( LA = str_remove(LA, "\\.(.*?)[:space:]"),  
           Seed.count = str_remove(Seed.count, "\\.(.*?)[:space:]")) 
 
 write.xlsx(df, "Output/06_Supplement_trait_values.xlsx")
