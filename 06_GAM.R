@@ -121,11 +121,11 @@ gam_func <- function(selectedtrait){
   coda.sam <- coda.samples(jm, c("b", "rho"),
                            n.iter = 10000, thin = 10)
   
-  saveRDS(jam, file = paste("RDS_files/06_GAM_time_multivariate_",covar,"_",
+  saveRDS(jam, file = paste("RDS_files/06_GAM_time_multivariate_100_",
                             selectedtrait, ".rds", sep = ""))
-  saveRDS(sam, file = paste("RDS_files/06_GAM_time_sam_multivariate_",covar,"_",
+  saveRDS(sam, file = paste("RDS_files/06_GAM_time_sam_multivariate_100_",
                             selectedtrait, ".rds", sep = ""))
-  saveRDS(coda.sam, file = paste("RDS_files/06_GAM_time_coda_multivariate_",covar,"_",
+  saveRDS(coda.sam, file = paste("RDS_files/06_GAM_time_coda_multivariate_100_",
                                  selectedtrait, ".rds", sep = ""))
 }
 plan(multisession(workers = 2))
@@ -140,12 +140,11 @@ files <-
   list.files("RDS_files/") %>% 
   str_subset(pattern = "06_GAM_time_multivariate_") %>% 
   str_subset(pattern = "sam", negate = TRUE) %>% 
-  str_subset(pattern = "coda", negate = TRUE) %>% 
-  str_subset(pattern = paste(covar))
+  str_subset(pattern = "coda", negate = TRUE)
 files
 
 traitname <- files %>% 
-  str_remove(., paste0("06_GAM_time_multivariate_",covar,"_")) %>% 
+  str_remove(., paste0("06_GAM_time_multivariate_100_")) %>% 
   str_remove(., ".rds")
 
 folderpath.fun <- function(x)
@@ -159,8 +158,7 @@ names(jam_list) <- traitname
 # create list of sam objects
 files <- 
   list.files("RDS_files/") %>% 
-  str_subset(pattern = "06_GAM_time_sam_multivariate_") %>% 
-  str_subset(pattern = paste(covar))
+  str_subset(pattern = "06_GAM_time_sam_multivariate_") 
 files
 
 sam_list <- files %>% 
@@ -171,8 +169,7 @@ names(sam_list) <- traitname
 # create list of coda objects
 files <- 
   list.files("RDS_files/") %>% 
-  str_subset(pattern = "06_GAM_time_coda_multivariate_") %>% 
-  str_subset(pattern = paste(covar))
+  str_subset(pattern = "06_GAM_time_coda_multivariate_100")
 files
 
 coda_list <- files %>% 
@@ -248,15 +245,15 @@ mylegend <- get_legend(p1)
 windows()
 pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p$LDMC, p$LeafC,
                      p$LeafN, p$LeafP, p$Seed.count, p$Seed.length, p$Seed.mass,
-                    layout_matrix = rbind(c(1,2,NA),
-                                          c(3,4,NA),
-                                          c(5,6,11),
-                                          c(7,8,NA),
-                                          c(9,10,NA)),
-                    mylegend, nrow = 5, ncol = 3, 
-                    widths = c(2,2,0.5))
+                    layout_matrix = rbind(c(NA,1,2,NA),
+                                          c(NA,3,4,NA),
+                                          c(NA,5,6,11),
+                                          c(NA,7,8,NA),
+                                          c(NA,9,10,NA)),
+                    mylegend, nrow = 5, ncol = 4, 
+                    widths = c(0.25,2,2,0.5))
 
-ggsave(paste0("Figures/Fig4-GAM_time_multivariate",covar, ".pdf"), pall, width = 174, 
+ggsave(paste0("Figures/Fig4-GAM_time_multivariate_100.pdf"), pall, width = 174, 
        height = 300, units = "mm", dpi = 600)
 graphics.off()
 }
@@ -339,14 +336,14 @@ gam_func2 <- function(selectedtrait){
                    inits = gam.model$inits, n.chains = 2,  n.adapt = 500)
   sam <- jags.samples(jm, c("b", "rho"),
                       n.iter = 10000, thin = 10)
-  saveRDS(sam, file = paste("RDS_files/06_GAM_arrival_multivariate_sam_",covar,"_",
+  saveRDS(sam, file = paste("RDS_files/06_GAM_arrival_multivariate_sam_100"_,
                             selectedtrait, ".rds", sep = ""))
   jam <- sim2jam(sam, gam.model$pregam)
-  saveRDS(jam, file = paste("RDS_files/06_GAM_arrival_multivariate_jam_",covar,"_",
+  saveRDS(jam, file = paste("RDS_files/06_GAM_arrival_multivariate_jam_100_",
                             selectedtrait, ".rds", sep = ""))
   coda.sam <- coda.samples(jm, c("b", "rho"),
                            n.iter = 10000, thin = 10)
-  saveRDS(coda.sam, file = paste("RDS_files/06_GAM_arrival_multivariate_coda_",covar,"_",
+  saveRDS(coda.sam, file = paste("RDS_files/06_GAM_arrival_multivariate_coda_100_",
                                  selectedtrait, ".rds", sep = ""))
 }
 plan(multisession)
@@ -489,14 +486,14 @@ mylegend <- get_legend(l1)
 windows()
 lall <- grid.arrange(l$PlantHeight, l$SLA, l$LA, l$LDMC, l$LeafC,
                      l$LeafN, l$LeafP, l$Seed.count, l$Seed.length, l$Seed.mass,
-                     layout_matrix = rbind(c(1,2,NA),
-                                           c(3,4,NA),
-                                           c(5,6,11),
-                                           c(7,8,NA),
-                                           c(9,10,NA)),
-                     mylegend, nrow = 5, ncol = 3, widths = c(2,2,0.5))
+                     layout_matrix = rbind(c(NA,1,2,NA),
+                                           c(NA,3,4,NA),
+                                           c(NA,5,6,11),
+                                           c(NA,7,8,NA),
+                                           c(NA,9,10,NA)),
+                     mylegend, nrow = 5, ncol = 4, widths = c(0.25,2,2,0.5))
 
-ggsave(paste0("Figures/Fig5a_GAM_arrival_multivariate_agri_",covar,".pdf"), lall,
+ggsave(paste0("Figures/Fig5a_GAM_arrival_multivariate_agri_100.pdf"), lall,
        width = 174, 
        height = 247, units = "mm", dpi = 600)
 graphics.off()
@@ -598,15 +595,15 @@ q <- purrr::map2(jam_list2, names(jam_list2),
 windows()
 qall <- grid.arrange(q$PlantHeight, q$SLA, q$LA, q$LDMC, q$LeafC, q$LeafN, q$LeafP,
                      q$Seed.count, q$Seed.length, q$Seed.mass,
-                     layout_matrix = rbind(c(1,2),
-                                           c(3,4),
-                                           c(5,6),
-                                           c(7,8),
-                                           c(9,10)),
-                     widths = c(2,2),
-                     nrow = 5, ncol = 2)
+                     layout_matrix = rbind(c(NA,1,2),
+                                           c(NA,3,4),
+                                           c(NA,5,6),
+                                           c(NA,7,8),
+                                           c(NA,9,10)),
+                     widths = c(0.25,2,2),
+                     nrow = 5, ncol = 3)
 
-ggsave(paste0("Figures/Fig5b_GAM__multivariate_temp",covar,".pdf"), qall,  width = 155, 
+ggsave(paste0("Figures/Fig5b_GAM__multivariate_temp_100.pdf"), qall,  width = 155, 
        height = 247, units = "mm", dpi = 600)
 graphics.off()
 }
