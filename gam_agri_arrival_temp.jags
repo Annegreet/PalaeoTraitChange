@@ -1,0 +1,26 @@
+model {
+  mu0 <- X %*% b ## expected response
+  for (i in 1:n) { y[i] ~ dnorm(mu[i], tau[i]) 
+  # parameterize tau
+  tau[i] <- 1/sd[i]^2
+  } 
+   # random effect of site
+  for (i in 1:n) { 
+    mu[i] <- mu0[i] + re[site[i]]
+  }
+  for(i in 1:nsite){ re[i] ~ dnorm(0, tau.re)}
+  tau.re ~ dgamma(0.001, 0.001)
+ 
+  for (i in 1:1) { b[i] ~ dnorm(0,10^-4) }
+  ## prior for s(years.since)... 
+  for (i in 2:9) { b[i] ~ dnorm(0, lambda[1]) }
+  for (i in 10:10) { b[i] ~ dnorm(0, lambda[2]) }
+  ## prior for s(Temperature)... 
+  for (i in 11:18) { b[i] ~ dnorm(0, lambda[3]) }
+  for (i in 19:19) { b[i] ~ dnorm(0, lambda[4]) }
+  ## smoothing parameter priors 
+  for (i in 1:4) {
+    lambda[i] ~ dgamma(.001,.001)
+    rho[i] <- log(lambda[i])
+  }
+}
