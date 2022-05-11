@@ -53,7 +53,7 @@ s3 <- left_join(ppe, polperc, by = "ppe.taxon") %>%
 
 ## S7 Trait estimates----
 pol <- tibble(ID = 1:47, pollentaxon = sort(pollentaxa))
-dfMEAN <- read_rds("RDS_files/05_multivariate_taxon_mean_100.rds") %>% 
+dfMEAN <- read_rds("RDS_files/05_multivariate_taxon_mean.rds") %>% 
   as.data.frame() %>% 
   rownames_to_column("parameter") %>%
   filter(str_detect(parameter, "mu")) %>%
@@ -78,7 +78,7 @@ dfMEAN <- read_rds("RDS_files/05_multivariate_taxon_mean_100.rds") %>%
   left_join(pol, by = "ID") %>% 
   mutate(Mean = exp(Mean))
 
-dfSD <- read_rds("RDS_files/05_multivariate_taxon_sd_100.rds")%>% 
+dfSD <- read_rds("RDS_files/05_multivariate_taxon_sd.rds")%>% 
   as.data.frame() %>% 
   rownames_to_column("parameter") %>%
   filter(str_detect(parameter, "sigma")) %>%
@@ -114,4 +114,3 @@ df <- left_join(dfMEAN,dfSD, by = c("pollentaxon", "trait")) %>%
           Seed.count = str_remove(Seed.count, "\\.(.*?)[:space:]")) 
 
 write.xlsx(df, "Output/06_Supplement_trait_values.xlsx")
-
