@@ -1,3 +1,6 @@
+# This script produces the age uncertainty estimates of the GAMs in Appendix S7
+# Annegreet Veeken
+
 # load packages
 library(tidyverse)
 library(ggplot2)
@@ -12,7 +15,7 @@ library(gridExtra)
 memory.limit(size = 99999999)
 
 ## Prepare data ----
-dfCWM <- readRDS("RDS_files/05_multivariate_CWM_100.rds")  
+dfCWM <- readRDS("RDS_files/05_multivariate_CWM.rds")  
 dfAGRI <- readRDS("RDS_files/Archaeological_indicators.rds") %>% 
   filter(age <= 10000) %>% 
   select(site.name, age, PresenceAgri) %>% 
@@ -169,13 +172,13 @@ plot_gam <- function(selectedtrait){
     purrr::map(~readRDS(.))
   
   jam_int <- 
-    purrr::map2(jam_ages[1:50], ages[1:50],
+    purrr::map2(jam_ages, ages,
                 ~tibble(intercept = coef(.x)[1],
                         agedraw = .y)) %>% 
     bind_rows()
 
   # extract fitted model from jam object
-  jam_values <- purrr::map2(jam_ages[1:50], ages[1:50],
+  jam_values <- purrr::map2(jam_ages, ages,
                              ~plot(.) %>%
                                flatten(.) %>%
                                keep(names(.) %in% c("x", "fit")) %>%
@@ -203,11 +206,7 @@ plot_gam <- function(selectedtrait){
 q <- purrr::map(trait, ~plot_gam(.))
 names(q) <- trait
 qall <- grid.arrange(q$PlantHeight, q$SLA, q$LA, q$LDMC, q$LeafC, q$LeafN, q$LeafP,
-<<<<<<< HEAD
                      q$Seed.count, q$Seed.length, q$Seed.mass,
-=======
-                     q$Seed.length, q$Seed.count,  q$Seed.mass,
->>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
                      layout_matrix = rbind(c(1,2),
                                            c(3,4),
                                            c(5,6),
@@ -275,7 +274,7 @@ plan(multisession(workers = 4))
 furrr::future_map(agerandom, ~gam_func2(trait[1], agerandom = .x), .options = furrr_options(seed = TRUE))
 plan(multisession(workers = 4))
 furrr::future_map(agerandom, ~gam_func2(trait[2], agerandom = .x), .options = furrr_options(seed = TRUE))
-plan(multisession(workers = 2))
+plan(multisession(workers = 4))
 furrr::future_map(agerandom, ~gam_func2(trait[3], agerandom = .x), .options = furrr_options(seed = TRUE))
 plan(multisession(workers = 4))
 furrr::future_map(agerandom, ~gam_func2(trait[4], agerandom = .x), .options = furrr_options(seed = TRUE))
@@ -287,9 +286,9 @@ plan(multisession(workers = 4))
 furrr::future_map(agerandom, ~gam_func2(trait[7], agerandom = .x), .options = furrr_options(seed = TRUE))
 plan(multisession(workers = 4))
 furrr::future_map(agerandom, ~gam_func2(trait[8], agerandom = .x), .options = furrr_options(seed = TRUE))
-plan(multisession(workers = 4))
+plan(multisession(workers = 16))
 furrr::future_map(agerandom, ~gam_func2(trait[9], agerandom = .x), .options = furrr_options(seed = TRUE))
-plan(multisession(workers = 4))
+plan(multisession(workers = 16))
 furrr::future_map(agerandom, ~gam_func2(trait[10], agerandom = .x), .options = furrr_options(seed = TRUE))
 }
 
@@ -312,13 +311,13 @@ plot_gam2 <- function(selectedtrait){
     purrr::map(~readRDS(.))
   
   jam_int2 <- 
-    purrr::map2(jam_ages[1:50], ages[1:50],
+    purrr::map2(jam_ages, ages,
                 ~tibble(intercept = coef(.x)[1],
                         agedraw = .y)) %>% 
     bind_rows()
   
   # extract fitted model from jam object
-  jam_values2 <- purrr::map2(jam_ages[1:50], ages[1:50],
+  jam_values2 <- purrr::map2(jam_ages, ages,
                              ~plot(., select = 1) %>% 
                                pluck(1) %>% 
                                keep(names(.) %in% c("x", "fit")) %>% 
@@ -331,11 +330,7 @@ plot_gam2 <- function(selectedtrait){
   
   # plot fitted models
   p <- ggplot(data = jam_values2, aes(x = x, y = exp(fit + intercept), group = agedraw)) +
-<<<<<<< HEAD
     geom_line(col = "darkgreen") +
-=======
-    geom_line(cpl = "darkgreen") +
->>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
     scale_y_continuous(paste(units$units[units$trait == selectedtrait]), trans = "log10",
                        limits = c(units$ymin[units$trait == selectedtrait],
                                   units$ymax[units$trait == selectedtrait])) +
@@ -382,12 +377,12 @@ plot_gam3 <- function(selectedtrait){
     purrr::map(~readRDS(.))
   
   jam_int3 <- 
-    purrr::map2(jam_ages[1:50], ages[1:50],
+    purrr::map2(jam_ages, ages,
                 ~tibble(intercept = coef(.x)[1],
                         agedraw = .y)) %>% 
     bind_rows()
   
-  jam_values3 <- purrr::map2(jam_ages[1:50], ages[1:50],
+  jam_values3 <- purrr::map2(jam_ages, ages,
                              ~plot(.,  select = 2) %>% pluck(2) %>% keep(names(.) %in% c("x", "fit")) %>%
                                # create df and add column with name of site that was left out
                                bind_cols %>% mutate(agedraw = .y)) %>%
@@ -409,17 +404,10 @@ plot_gam3 <- function(selectedtrait){
 }
 
 windows()
-<<<<<<< HEAD
 l <- purrr::map(trait, ~plot_gam3(.))
 names(l) <- trait
 lall <- grid.arrange(l$PlantHeight, l$SLA, l$LA, l$LDMC, l$LeafC, l$LeafN, l$LeafP,
                      l$Seed.count, l$Seed.length, l$Seed.mass,
-=======
-p <- purrr::map(trait, ~plot_gam3(.))
-names(p) <- trait
-pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p$LDMC, p$LeafC, p$LeafN, p$LeafP,
-                     p$Seed.count, p$Seed.length, p$Seed.mass,
->>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
                      layout_matrix = rbind(c(1,2),
                                            c(3,4),
                                            c(5,6),
@@ -428,14 +416,7 @@ pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p$LDMC, p$LeafC, p$LeafN, p$Lea
                      widths = c(2,2),
                      nrow = 5, ncol = 2)
 
-<<<<<<< HEAD
 ggsave("Figures/SI5-GAM_temp_age_uncertainty.png", lall, width = 174, 
        height = 247, units = "mm", dpi = 600)
 }
 graphics.off()
-=======
-ggsave("Figures/SI5-GAM_temp_age_uncertainty.png", qall, width = 174, 
-       height = 247, units = "mm", dpi = 600)
-}
-graphics.off()
->>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
