@@ -16,7 +16,7 @@ library(furrr)
 # memory.limit(size = 999999)
 
 ## Prepare data ----
-dfCWM <- readRDS("RDS_files/05_multivariate_CWM_100.rds") 
+dfCWM <- readRDS("RDS_files/05_multivariate_CWM.rds") 
 dfAGRI <- readRDS("RDS_files/Archaeological_indicators.rds") %>% 
   filter(age <= 10000) %>% 
   select(site.name, age, PresenceAgri) %>% 
@@ -68,6 +68,11 @@ units <- tibble(trait = c("SLA", "PlantHeight","LDMC",
                           "Seed mass")
 )
 
+ylim <- tibble(trait = c("PlantHeight","SLA", "LA","LDMC", 
+                         "LeafC", "LeafN", "LeafP", 
+                         "Seed.count", "Seed.length", "Seed.mass"),
+               ymin = c(0.1, 5, 1, 0.2,  380, 10, 1, 1, 1, 0.1),
+               ymax = c(20, 30, 4000,0.5, 550, 40, 4, 12000, 15, 500))
 sitenames <- unique(dfCWM$site.name)
 
 # merge data sets
@@ -90,7 +95,7 @@ rm(dfAGRI, dfTEMP, dfTRSH, lCROP, lTRSH, dfCROP, dfCWM)
 
 ## GAM's
 # GAM Mean ~ s(Time.BP) ----
-if(0){
+if(1){
 gam_func <- function(selectedtrait){
   CWM <- CWMall %>% 
     filter(trait == selectedtrait) %>% 
@@ -121,11 +126,11 @@ gam_func <- function(selectedtrait){
   coda.sam <- coda.samples(jm, c("b", "rho"),
                            n.iter = 10000, thin = 10)
   
-  saveRDS(jam, file = paste("RDS_files/06_GAM_time_multivariate_100_",
+  saveRDS(jam, file = paste("RDS_files/06_GAM_time_multivariate_",
                             selectedtrait, ".rds", sep = ""))
-  saveRDS(sam, file = paste("RDS_files/06_GAM_time_sam_multivariate_100_",
+  saveRDS(sam, file = paste("RDS_files/06_GAM_time_sam_multivariate_",
                             selectedtrait, ".rds", sep = ""))
-  saveRDS(coda.sam, file = paste("RDS_files/06_GAM_time_coda_multivariate_100_",
+  saveRDS(coda.sam, file = paste("RDS_files/06_GAM_time_coda_multivariate_",
                                  selectedtrait, ".rds", sep = ""))
 }
 plan(multisession(workers = 2))
@@ -144,7 +149,7 @@ files <-
 files
 
 traitname <- files %>% 
-  str_remove(., paste0("06_GAM_time_multivariate_100_")) %>% 
+  str_remove(., paste0("06_GAM_time_multivariate_")) %>% 
   str_remove(., ".rds")
 
 folderpath.fun <- function(x)
@@ -169,7 +174,7 @@ names(sam_list) <- traitname
 # create list of coda objects
 files <- 
   list.files("RDS_files/") %>% 
-  str_subset(pattern = "06_GAM_time_coda_multivariate_100")
+  str_subset(pattern = "06_GAM_time_coda_multivariate_")
 files
 
 coda_list <- files %>% 
@@ -194,9 +199,10 @@ dev.off()
 gg_func <- function(jam, selectedtrait) {
   values <- plot(jam, seWithMean = TRUE) %>% flatten
   intercept <- coef(jam)[1]
-  df <- data.frame(age = values$x, Mean = intercept + values$fit, se = values$se) 
+  df <- data.frame(age = values$x, Mean = intercept + values$fit, se = values$se) %>% 
+    mutate(Min = Mean - se, Max = Mean + se) 
   
-  ggplot(data = CWMall[CWMall$trait == selectedtrait,], 
+  p <- ggplot(data = CWMall[CWMall$trait == selectedtrait,], 
          aes(x = age, y = exp(Mean))) +
     geom_point(aes(colour = tree),  size = .3) +
     scale_color_gradient("Tree pollen\n(%)", low = cbf[5],
@@ -211,6 +217,12 @@ gg_func <- function(jam, selectedtrait) {
     theme_bw() +
     theme(legend.position = "none",
           text = element_text(size = 10))
+  
+  df <- df %>% 
+    select(age, Mean, Min, Max) %>% 
+    mutate(Mean = exp(Mean), Min = exp(Min), Max = exp(Max))
+  
+  list(values=df,plot=p)
 }
 
 windows()
@@ -218,7 +230,7 @@ p <- purrr::map2(jam_list, names(jam_list),
                  ~gg_func(.x,.y))
 
 ## plot 1 trait for extracting legend 
-selectedtrait <- "SLA"
+selectedtrait <- "LeafP"
 traitindex <- which(names(jam_list) %in% selectedtrait)
 windows()
 values <- plot(jam_list[[traitindex]]) %>% flatten
@@ -243,8 +255,8 @@ p1 <-  ggplot(data = CWMall[CWMall$trait == selectedtrait,],
 mylegend <- get_legend(p1)
 
 windows()
-pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p$LDMC, p$LeafC,
-                     p$LeafN, p$LeafP, p$Seed.count, p$Seed.length, p$Seed.mass,
+pall <- grid.arrange(p$PlantHeight$plot, p$SLA$plot, p$LA$plot, p$LDMC$plot, p$LeafC$plot,
+                     p$LeafN$plot, p$LeafP$plot, p$Seed.count$plot, p$Seed.length$plot, p$Seed.mass$plot,
                     layout_matrix = rbind(c(NA,1,2,NA),
                                           c(NA,3,4,NA),
                                           c(NA,5,6,11),
@@ -253,7 +265,7 @@ pall <- grid.arrange(p$PlantHeight, p$SLA, p$LA, p$LDMC, p$LeafC,
                     mylegend, nrow = 5, ncol = 4, 
                     widths = c(0.25,2,2,0.5))
 
-ggsave(paste0("Figures/Fig4-GAM_time_multivariate_100.pdf"), pall, width = 174, 
+ggsave(paste0("Figures/Fig4-GAM_time_multivariate.pdf"), pall, width = 174, 
        height = 300, units = "mm", dpi = 600)
 graphics.off()
 }
@@ -286,11 +298,7 @@ for (i in ii) {
   }
 }
 
-ylim <- tibble(trait = c("PlantHeight","SLA", "LA","LDMC", 
-                         "LeafC", "LeafN", "LeafP", 
-                         "Seed.count", "Seed.length", "Seed.mass"),
-               ymin = c(1, 5, 1, 0.2,  380, 10, 1, 1, 1, 1),
-               ymax = c(30, 30, 4000,0.5, 550, 40, 4, 12000, 15, 1000))
+
 # plot
 png("Figures/SI5-Draws-time-multivariate.png", width = 174 , height = 300, units = "mm", res = 600)
 par(mfrow = c(5,2), mar = c(4.1, 4.1, 4.1, 1.1))
@@ -301,7 +309,7 @@ dev.off()
 }
 
 # GAM Mean ~ s(since.agri) + s(temp) ----
-if(0){
+if(1){
 gam_func2 <- function(selectedtrait){
   CWM <- CWMall %>% 
     #filter sites with agriculture already present
@@ -315,7 +323,8 @@ gam_func2 <- function(selectedtrait){
     group_by(site.name, PresenceAgri) %>% 
     mutate(lag = ifelse(PresenceAgri == "After agriculture", age - lead(age), age - lag(age)),
            years.since = ifelse(PresenceAgri == "After agriculture", -rev(cumsum(rev(replace_na(lag, 0)))),
-                                -cumsum(replace_na(lag, 0)))) 
+                                -cumsum(replace_na(lag, 0)))) %>% 
+    filter(years.since > -5000 & years.since < 5000)
   
   # Reference for code:
   # Simon N.Wood (2017). Generalized additive models. An introduction with R (2nd ed). page 374-376
@@ -336,18 +345,18 @@ gam_func2 <- function(selectedtrait){
                    inits = gam.model$inits, n.chains = 2,  n.adapt = 500)
   sam <- jags.samples(jm, c("b", "rho"),
                       n.iter = 10000, thin = 10)
-  saveRDS(sam, file = paste("RDS_files/06_GAM_arrival_multivariate_sam_100"_,
+  saveRDS(sam, file = paste("RDS_files/06_GAM_arrival_multivariate_sam_",
                             selectedtrait, ".rds", sep = ""))
   jam <- sim2jam(sam, gam.model$pregam)
-  saveRDS(jam, file = paste("RDS_files/06_GAM_arrival_multivariate_jam_100_",
+  saveRDS(jam, file = paste("RDS_files/06_GAM_arrival_multivariate_jam_",
                             selectedtrait, ".rds", sep = ""))
   coda.sam <- coda.samples(jm, c("b", "rho"),
                            n.iter = 10000, thin = 10)
-  saveRDS(coda.sam, file = paste("RDS_files/06_GAM_arrival_multivariate_coda_100_",
+  saveRDS(coda.sam, file = paste("RDS_files/06_GAM_arrival_multivariate_coda_",
                                  selectedtrait, ".rds", sep = ""))
 }
-plan(multisession)
-furrr::future_map(trait, ~gam_func2(.), .options = furrr_options(seed = TRUE))
+plan(multisession(workers = 2))
+furrr::future_map(trait[c(2:5,7:10)], ~gam_func2(.), .options = furrr_options(seed = TRUE))
 }
 
 if(1){
@@ -359,7 +368,7 @@ files <-
   str_subset(pattern = "jam") 
 files
 traitname <- files %>% 
-  str_remove(., paste0("06_GAM_arrival_multivariate_jam_100_")) %>% 
+  str_remove(., paste0("06_GAM_arrival_multivariate_jam_")) %>% 
   str_remove(., ".rds")
 traitname
 folderpath.fun <- function(x)
@@ -422,9 +431,10 @@ gg_func_agri <- function(jam, selectedtrait) {
   intercept <- coef(jam)[1]
   values <-  plot(jam, seWithMean = TRUE, select = 1) %>% pluck(1)
   df <- data.frame(years.since = values$x, Mean = values$fit + intercept,
-               se = values$se)
+               se = values$se) %>% 
+    mutate(Min = Mean - se, Max = Mean + se) 
   
-  ggplot(data = CWM, aes(x = years.since, y = exp(Mean))) +
+  p <- ggplot(data = CWM, aes(x = years.since, y = exp(Mean))) +
     geom_point(aes(colour = crop), size = 0.3) +
     scale_color_gradient("Crop pollen (%)", low = cbf[5], high = cbf[4],
                          limits = c(0.01,100), trans = "log",breaks = c(0.1,2.5,50),
@@ -441,7 +451,13 @@ gg_func_agri <- function(jam, selectedtrait) {
     theme_bw() +
     theme(legend.position = "none",
           text = element_text(size = 10))
-}
+  
+  df <- df %>% 
+    select(years.since, Mean, Min, Max) %>% 
+    mutate(Mean = exp(Mean), Min = exp(Min), Max = exp(Max))
+  
+  list(values = df, plot = p)
+  }
 
 windows()
 l <- purrr::map2(jam_list2, names(jam_list2), 
@@ -462,6 +478,11 @@ CWM <- CWMall %>%
   mutate(lag = ifelse(PresenceAgri == "After agriculture", age - lead(age), age - lag(age)),
          years.since = ifelse(PresenceAgri == "After agriculture", -rev(cumsum(rev(replace_na(lag, 0)))),
                               -cumsum(replace_na(lag, 0)))) 
+# extract smooth for plotting
+intercept <- coef(jam_list2[[selectedtrait]])[1]
+values <-  plot(jam_list2[[selectedtrait]], seWithMean = TRUE, select = 1) %>% pluck(1)
+df <- data.frame(years.since = values$x, Mean = values$fit + intercept,
+                 se = values$se)
 
 l1 <-   ggplot(data = CWM, aes(x = years.since, y = exp(Mean))) +
   geom_point(aes(colour = crop), size = 0.3) +
@@ -493,7 +514,7 @@ lall <- grid.arrange(l$PlantHeight, l$SLA, l$LA, l$LDMC, l$LeafC,
                                            c(NA,9,10,NA)),
                      mylegend, nrow = 5, ncol = 4, widths = c(0.25,2,2,0.5))
 
-ggsave(paste0("Figures/Fig5a_GAM_arrival_multivariate_agri_100.pdf"), lall,
+ggsave(paste0("Figures/Fig5a_GAM_arrival_multivariate_agri.pdf"), lall,
        width = 174, 
        height = 247, units = "mm", dpi = 600)
 graphics.off()
@@ -537,11 +558,7 @@ gam_samples_agri <- function(selectedtrait){
   }
 }
 
-ylim <- tibble(trait = c("PlantHeight","SLA", "LA","LDMC", 
-                         "LeafC", "LeafN", "LeafP", 
-                         "Seed.count", "Seed.length", "Seed.mass"),
-               ymin = c(1, 5, 1, 0.2,  380, 10, 1, 1, 1, 1),
-               ymax = c(30, 30, 4000,0.5, 550, 40, 4, 12000, 15, 1000))
+
 # plot
 png("Figures/SI5-Draws-agri-multivariate.png", width = 174, 
     height = 300, units = "mm", res = 300)
@@ -603,7 +620,7 @@ qall <- grid.arrange(q$PlantHeight, q$SLA, q$LA, q$LDMC, q$LeafC, q$LeafN, q$Lea
                      widths = c(0.25,2,2),
                      nrow = 5, ncol = 3)
 
-ggsave(paste0("Figures/Fig5b_GAM__multivariate_temp_100.pdf"), qall,  width = 155, 
+ggsave(paste0("Figures/Fig5b_GAM__multivariate_temp.pdf"), qall,  width = 155, 
        height = 247, units = "mm", dpi = 600)
 graphics.off()
 }
@@ -641,11 +658,6 @@ gam_samples_temp <- function(selectedtrait){
   }
 }
 
-ylim <- tibble(trait = c("PlantHeight","SLA", "LA","LDMC", 
-                         "LeafC", "LeafN", "LeafP", 
-                         "Seed.count", "Seed.length", "Seed.mass"),
-               ymin = c(1, 5, 1, 0.2,  380, 10, 1, 1, 1, 1),
-               ymax = c(30, 30, 4000,0.5, 550, 40, 4, 12000, 15, 1000))
 png("Figures/SI5-Draws-temp-multivariate.png", width = 174, height = 300, units = "mm", res = 300)
 par(mfrow = c(5,2), mar = c(4.1, 4.1, 4.1, 1.1))
 purrr::map(c("PlantHeight","SLA", "LA","LDMC", 
