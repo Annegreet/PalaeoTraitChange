@@ -71,7 +71,7 @@ pollentaxa <- pol %>%
   dplyr::select(-site.name, -age) %>%
   colnames(.)
 
-if(0){
+if(1){
 ## JAGS model----
 # prepare data
 Trait <- trait %>% 
@@ -191,8 +191,8 @@ dev.off()
 }
 
 
-if(0){
-results <- readRDS("RDS_files/05_multivariate_runjags_100.rds")
+if(1){
+results <- readRDS("RDS_files/05_multivariate_runjags.rds")
 
 
 ## Calculate summary 
@@ -7719,7 +7719,7 @@ cwmid <- dfCWM %>%
 dfCWM <- dfCWM %>% 
   left_join(lab, by = "ID")
 
-saveRDS(dfCWM, paste0("RDS_files/05_multivariate_CWM_100.rds"))
+saveRDS(dfCWM, paste0("RDS_files/05_multivariate_CWM.rds"))
 
 
 ## Taxon mean ----
