@@ -1,5 +1,5 @@
 # This codes reruns the GAM models leaving out one site at the time, with the 
-# goal of testing the sensivity to choice of sites.
+# goal of testing the sensitivity to choice of sites. Appendix S7
 # Annegreet Veeken
 
 ## load packages
@@ -17,7 +17,7 @@ library(cowplot) # for get_legend
 memory.limit(size = 9999999)
 
 ## Prepare data ----
-dfCWM <- readRDS(paste0("RDS_files/05_multivariate_CWM_100.rds")) 
+dfCWM <- readRDS(paste0("RDS_files/05_multivariate_CWM.rds")) 
 dfAGRI <- readRDS("RDS_files/Archaeological_indicators.rds") %>% 
   filter(age <= 10000) %>% 
   select(site.name, age, PresenceAgri) %>% 
@@ -93,7 +93,7 @@ rm(dfAGRI,dfCROP,dfTEMP,lCROP,lTRSH,dfTRSH)
 
 ## GAM's
 # GAM Mean ~ s(Time.BP) ----
-if(0){
+if(1){
 gam_func <- function(selectedtrait, sitename){
   CWM <- CWMall %>% 
     filter(trait == selectedtrait) %>% 
@@ -149,7 +149,6 @@ furrr::future_map(sitenames, ~gam_func(trait[9], sitename = .x), .options = furr
 plan(multisession(workers = 4))
 furrr::future_map(sitenames, ~gam_func(trait[10], sitename = .x), .options = furrr_options(seed = TRUE))
 }
-<<<<<<< HEAD
 
 if(1){
 # Plot  GAM1 ----
@@ -160,18 +159,6 @@ files <- list.files("RDS_files/") %>%
   str_subset(paste0("_", selectedtrait))
 files
 
-=======
-
-if(1){
-# Plot  GAM's ----
-# extract fitted model from jam object
-plot_gam <- function(selectedtrait) {
-files <- list.files("RDS_files/") %>% 
-  str_subset("06_GAM_resample_sites_") %>% 
-  str_subset(paste0("_", selectedtrait))
-files
-
->>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
 folderpath.fun <- function(x)
 {paste("RDS_files", x, sep = "/")}
 
@@ -232,7 +219,7 @@ ggsave("Figures/SI5-GAM_time_resample_sites.png", qall, width = 174,
 }
 
 # GAM Mean ~ s(since.agri) + s(temp) ----
-if(0){
+if(1){
 gam_func2 <- function(selectedtrait, sitename){
   CWM <- CWMall %>% 
     #filter sites with agriculture already present
@@ -304,7 +291,6 @@ furrr::future_map(agrisites, ~gam_func2(trait[9], sitename = .x), .options = fur
 plan(multisession(workers = 4))
 furrr::future_map(agrisites, ~gam_func2(trait[10], sitename = .x), .options = furrr_options(seed = TRUE))
 }
-<<<<<<< HEAD
 
 # Plot  GAM2 ----
 if(1){
@@ -321,24 +307,6 @@ sites <- files %>%
 folderpath.fun <- function(x)
   {paste("RDS_files/", x, sep = "/")}
 
-=======
-
-# Plot  GAM's agriculture ----
-if(1){
-plot_gam2 <- function(selectedtrait){
-files <- list.files("RDS_files/") %>% 
-  str_subset("06_GAM2_resample_sites_") %>% 
-  str_subset(paste0("_", selectedtrait))
-files
-
-sites <- files %>% 
-  str_remove(paste0("06_GAM2_resample_sites_",selectedtrait, "_")) %>% 
-  str_remove(".rds")
-
-folderpath.fun <- function(x)
-  {paste("RDS_files/", x, sep = "/")}
-
->>>>>>> 7af38889830c182ba986eac81e6030859a4e4614
 jam_sites <- files %>% 
   folderpath.fun(.) %>% 
   purrr::map(~readRDS(.))
