@@ -46,7 +46,7 @@ lPOLcorrected <-  lPOL %>%
                # bind ppe data
                left_join(., ppe, by = "ppe.taxon") %>% 
                # adjust count with ppe
-               mutate(adjustedcount = count*PPE) %>%
+               mutate(adjustedcount = count/PPE) %>%
                group_by(site.name, age, depth) %>% 
                # calculate percentages
                mutate(adjustedpercent = adjustedcount/sum(adjustedcount),
@@ -64,45 +64,3 @@ lPOLcorrected <-  lPOL %>%
 
 saveRDS(lPOLcorrected, "RDS_files/04_PollenWEU-PPEcorrected.rds")
 
-
-lPOLcorrected_herbs <-  lPOL %>%
-  purrr::map(. %>%
-               filter(!ppe.taxon == "no ppe") %>% 
-               # bind ppe data
-               left_join(., ppe, by = "ppe.taxon") %>% 
-               # filter for herbs 
-               filter(GroupID == "HERB") %>% 
-               # adjust count with ppe
-               mutate(adjustedcount = count*PPE) %>%
-               group_by(site.name, age, depth) %>% 
-               # calculate percentages
-               mutate(adjustedpercent = adjustedcount/sum(adjustedcount),
-                      percent = count/sum(count, na.rm = TRUE)) %>%
-               group_by(site.name, age, depth, ppe.taxon) %>%
-               summarise(adjustedpercent = sum(adjustedpercent, na.rm = TRUE),
-                         percent = sum(percent)) %>% 
-               # sort
-               arrange(depth, ppe.taxon))
-
-saveRDS(lPOLcorrected_herbs, "RDS_files/04_PollenWEU-PPEcorrected-HERBS.rds")
-
-lPOLcorrected_trees <-  lPOL %>%
-  purrr::map(. %>%
-               filter(!ppe.taxon == "no ppe") %>% 
-               # bind ppe data
-               left_join(., ppe, by = "ppe.taxon") %>% 
-               # filter for trees 
-               filter(GroupID %in% c("TRSH","DWAR")) %>% 
-               # adjust count with ppe
-               mutate(adjustedcount = count*PPE) %>%
-               group_by(site.name, age, depth) %>% 
-               # calculate percentages
-               mutate(adjustedpercent = adjustedcount/sum(adjustedcount),
-                      percent = count/sum(count, na.rm = TRUE)) %>%
-               group_by(site.name, age, depth, ppe.taxon) %>%
-               summarise(adjustedpercent = sum(adjustedpercent, na.rm = TRUE),
-                         percent = sum(percent)) %>% 
-               # sort
-               arrange(depth, ppe.taxon))
-
-saveRDS(lPOLcorrected_trees, "RDS_files/04_PollenWEU-PPEcorrected-TRSH.rds")
