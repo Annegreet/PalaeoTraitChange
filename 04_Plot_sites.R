@@ -80,17 +80,3 @@ tempmap
 
 ggsave("Figures/SI6-TemperatureMap.png", tempmap, dpi = 600, height = 7, width = 7)
 
-# leaflet map
-lPOL_meta <- readRDS("C:/Users/lgxgv/OneDrive - The University of Nottingham/Data analysis/PhD/Meta-analysis/Analysis/RDS_files/01_Pollen_sites_meta.rds")
-lPOL_meta <- lPOL_meta %>% 
-  filter(site.name %in% sitenames) %>% 
-  as_tibble()
-
-popup <- paste0("<b>",lPOL_meta$site.name,"</b><br/>",
-                "<b>Elevation</b> ", lPOL_meta$elev,"<br/>",
-                "<b>Description</b> ", lPOL_meta$desc,"<br/>",
-                "<b>Citation</b> ", lPOL_meta$citation) %>% 
-  lapply(htmltools::HTML)
-leaflet(lPOL_meta) %>% fitBounds(-7.68,71.27, 19.63, 42.22) %>% 
-  addTiles() %>% 
-  addMarkers(~long, ~lat, popup = popup)

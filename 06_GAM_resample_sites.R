@@ -93,7 +93,7 @@ rm(dfAGRI,dfCROP,dfTEMP,lCROP,lTRSH,dfTRSH)
 
 ## GAM's
 # GAM Mean ~ s(Time.BP) ----
-if(1){
+if(0){
 gam_func <- function(selectedtrait, sitename){
   CWM <- CWMall %>% 
     filter(trait == selectedtrait) %>% 
