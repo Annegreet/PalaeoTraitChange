@@ -1,4 +1,4 @@
-# This script produces the PCA plots and map fig. 2, fig.3 and 
+# This script produces the PCA plots and map fig. 2, and 
 # supplementary S6
 
 # Load libraries
