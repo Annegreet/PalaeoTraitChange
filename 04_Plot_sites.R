@@ -11,25 +11,7 @@ library(htmltools)
 # Load data
 lPOL <- readRDS("RDS_files/03_PollenWEU-Harmonised.rds")
 
-# Create tibble with lat/long and time.span
-lat <- lPOL %>% 
-  purrr::map(., ~pull(.,lat) %>% unique) %>% unlist 
-long <- lPOL %>% 
-  purrr::map(., ~pull(.,long) %>% unique) %>% unlist 
-sitenames <- lPOL %>% 
-  purrr::map(., ~pull(.,site.name) %>% unique) %>% unlist
-age.old <- lPOL %>% 
-  purrr::map(., ~pull(.,age) %>% max(.)) %>% unlist
-age.young <- lPOL %>% 
-  purrr::map(., ~pull(.,age) %>% min(.)) %>% unlist
-
-sites <- tibble(site.name = sitenames,
-                    lat = lat,
-                    long = long,
-                    age.old = round(age.old,0), 
-                    age.young = round(age.young,0),
-                    time.span = age.old - age.young)
-
+?
 # Europe map
 eu <- ggplot2::map_data("world", 
                         region = c("UK", "Ireland","Netherlands",
