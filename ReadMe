@@ -1,3 +1,13 @@
 This repository contains the script for the manuscript:
 
 Veeken, A., Santos, M.J., McGowan, S., Davies, A.L., Schrodt, F. (in prep). Pollen-based reconstruction reveals the impact of the onset of agriculture on plant functional trait composition.
+Contact: Veeken.g.a@gmail.com
+
+Data for this project can be found on the OSF repository: https://osf.io/jk5bf/
+- ADavies Thesis tila files for Annegreet jan 2021.xlsx - Contain the pollen records for 4 sites provided by Althea Davies that were not in Neotoma
+- ARCHAEOGLOBE_CONSENSUS_ASSESMENT.tab - data from the ArchaeoGLOBE project
+- Conversion_table-v2.xlsx - pollentype to species conversion table that was created by script 01_PollenTYpe_Species_GBIF.R
+- HarmonizationTAblePollen_EPD_mottl.xlsx - harmomization table for pollen nomenclature based on the tables of the EPD and Mottl et al (2021) Science.
+- RPP_Dataset_v1_Table_3_4.xlsx - pollen productivity estimates from Wieczorek & Herzschuh 2020, table 3 & 4
+- SelectedPollenRecords.xlsx - pollen records selected from the structured search
+- TryAccTraits.txt - Ellenberg values from TRY
